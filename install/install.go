@@ -41,10 +41,8 @@ func DockerIp() net.IP {
 
 func SshSession(host string) (session *ssh.Session, err error) {
 	config := SshConfig()
-	fmt.Printf("Connecting?")
 	connection, err := ssh.Dial("tcp", host, config)
 	if err != nil {
-		fmt.Printf("Error: %v", err)
 		return nil, fmt.Errorf("Failed to dial: %s", err)
 	}
 	session, err = connection.NewSession()
@@ -124,23 +122,28 @@ func InstallParity() {
 	// Create the install mirror daemon template
 	host := "docker:22"
 	file := CreateBoot2DockerDaemon()
-	fmt.Printf("File: %v", file.Name())
 	session, err := SshSession(host)
-	fmt.Printf("Error: %v", err)
+	if err != nil {
+		fmt.Println("Unable to connect to Docker host. Is Docker running? (%v)", err.Error())
+		os.Exit(1)
+	}
 
 	// Upload the boot script and give perms
 	remoteTmpFile := fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	RunCommand(host, fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
-	fmt.Printf("Error: %v", err)
 	session.Close()
 
 	session, err = SshSession(host)
 	err = scp.CopyPath("./templates/mirror-daemon.sh", remoteTmpFile, session)
-	fmt.Printf("Error: %v", err)
 	RunCommand(host, fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/mirror-daemon.sh"))
 
-	// Execute that script ()
+	// Start the mirror daemon
+	//RunCommand(host, fmt.Sprintf("/var/lib/boot2docker/bootlocal.sh start"))
+	fmt.Printf("Restarting Docker daemon host...")
+
+	// Wait for host port 22 to be back up...
+	RunCommand(host, "sudo shutdown -r now")
 
 	//
 
