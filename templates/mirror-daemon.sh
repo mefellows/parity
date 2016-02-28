@@ -25,13 +25,13 @@ PIDFILE=/var/run/mirror.pid
 RETVAL=0
 
 start() {
-	echo -n $"Starting $NAME:"
+	echo -n "Starting $NAME: "
 	mirror daemon ${DAEMONOPTS} >> "${MIRROR_LOGFILE}" 2>&1 &
 	PID=$(ps -ef | grep mirror | grep daemon | awk -F" " '{print $2}')
-  if [ -z $PID ]; then
+  if [ -z "$PID" ]; then
       printf "%s\n" "Fail"
   else
-      echo $PID > $PIDFILE
+      echo "$PID" > $PIDFILE
       printf "%s\n" "Ok"
   fi
 }

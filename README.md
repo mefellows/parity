@@ -19,3 +19,7 @@ Simplify Docker for non LXC-native environments (Windows, Mac OSX) by:
 * Allowing customisation to the workflow, or extension of the platform via a plugin interface
 
 Additionally, Parity will not require any other external dependencies, except the Docker ecosystem.
+
+
+## Development
+go-bindata  --pkg install --o install/assets.go templates/

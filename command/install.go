@@ -2,7 +2,6 @@ package command
 
 import (
 	"flag"
-	"fmt"
 	"github.com/mefellows/parity/install"
 	"strings"
 )
@@ -18,16 +17,12 @@ func (c *InstallCommand) Run(args []string) int {
 
 	cmdFlags.IntVar(&c.Port, "port", 8123, "The http port to listen on")
 
-	// Validate
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
-	c.Meta.Ui.Output(fmt.Sprintf("Installing parity on port %d", c.Port))
-	install.InstallParity()
-	// install.CreateBoot2DockerDaemon()
-	// _, err := install.RunCommand("docker:22", "ls -larth")
-	// fmt.Printf("Error: %v", err)
+	c.Meta.Ui.Output("Installing Parity")
+	install.InstallParity(c.Meta.Ui)
 
 	return 0
 }
