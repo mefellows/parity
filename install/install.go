@@ -216,8 +216,6 @@ func CheckSharedFolders(ui cli.Ui) bool {
 }
 
 func InstallParity(ui cli.Ui) {
-	os.Exit(1)
-
 	// Create the install mirror daemon template
 	file := CreateBoot2DockerDaemon()
 	session, err := SshSession(DockerHost())
