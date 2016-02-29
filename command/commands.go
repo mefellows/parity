@@ -27,5 +27,15 @@ func init() {
 				Meta: meta,
 			}, nil
 		},
+		"sync": func() (cli.Command, error) {
+			return &SyncCommand{
+				Meta: meta,
+			}, nil
+		},
+		"run": func() (cli.Command, error) {
+			return &RunCommand{
+				Meta: meta,
+			}, nil
+		},
 	}
 }
