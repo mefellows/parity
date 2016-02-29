@@ -1,4 +1,8 @@
 #!/bin/bash -e
+echo "Before running this, make sure you have run 'parity run' first!"
+echo ""
+echo ""
+
 echo 'This is a new file' > test.txt
 docker build -t mirror-test .
 docker run -d --name mirror-test -v $PWD:/opt/test-app -p 8080:8080 mirror-test

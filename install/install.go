@@ -211,8 +211,8 @@ func UnmountSharedFolders() {
 	}
 }
 func CheckSharedFolders(ui cli.Ui) bool {
-	res, err := ui.Ask("For Parity to operate properly, it requires the default Virtualbox shared folders to be removed,\nwould you like us to automatically unmount them for you? (yes/no)\n")
-	return err == nil || res == "yes"
+	res, err := ui.Ask("For Parity to operate properly, Virtualbox shares must be removed. Would you like us to automatically do this for you? (yes/no)")
+	return err == nil && res == "yes"
 }
 
 func InstallParity(ui cli.Ui) {
