@@ -5,6 +5,7 @@ Docker on OSX and Windows, as it was meant to be.
 Docker is awesome, but it suffers from a few annoying drawbacks:
 
 * Users on Mac OSX or Windows need to go by an intermediary - a virtual machine. This means code synchronisation is a pain, and constant rebuilds are necessary.
+* Only certain directories are automatically shared into the vm (e.g. `/Users` on OSX)
 * Docker Machine requires you to manage multiple machines, but generally you only ever deal with one of them.
 * It is too flexible, resulting in many different ways to achieve 'normal' things. Most people just want to build their app without having to worry about orchestrating containers.
 

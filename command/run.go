@@ -86,6 +86,10 @@ func (c *RunCommand) Run(args []string) int {
 			volumes = append(volumes, v)
 		}
 	}
+	// Add PWD if nothing in compose
+	if len(volumes) == 0 {
+		volumes = append(volumes, dir)
+	}
 
 	pki.MirrorConfig.ClientTlsConfig = config
 

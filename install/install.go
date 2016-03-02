@@ -233,23 +233,24 @@ func interactiveDocker() {
 
 func ReadComposeVolumes() []string {
 	volumes := make([]string, 0)
-	log.Println("Reading compose file")
-	project, err := docker.NewProject(&docker.Context{
-		Context: project.Context{
-			ComposeFiles: []string{"docker-compose.yml"},
-			ProjectName:  "my-compose",
-		},
-	})
-	if err != nil {
-		log.Println("Could not parse compose file")
-	}
-	for _, c := range project.Configs {
-		for _, v := range c.Volumes {
-			v = strings.SplitN(v, ":", 2)[0]
-			if v == "." {
-				v, _ = os.Getwd()
+	if _, err := os.Stat("docker-compose.yml"); err == nil {
+		project, err := docker.NewProject(&docker.Context{
+			Context: project.Context{
+				ComposeFiles: []string{"docker-compose.yml"},
+				ProjectName:  "my-compose",
+			},
+		})
+		if err != nil {
+			log.Println("Could not parse compose file")
+		}
+		for _, c := range project.Configs {
+			for _, v := range c.Volumes {
+				v = strings.SplitN(v, ":", 2)[0]
+				if v == "." {
+					v, _ = os.Getwd()
+				}
+				volumes = append(volumes, v)
 			}
-			volumes = append(volumes, v)
 		}
 	}
 
