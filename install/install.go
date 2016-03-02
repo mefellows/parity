@@ -7,12 +7,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/docker/libcompose/docker"
+	"github.com/docker/libcompose/project"
+	dockerclient "github.com/fsouza/go-dockerclient"
 	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"
 	"github.com/tmc/scp"
@@ -25,7 +29,7 @@ const TMP_FILE = "/tmp/bootlocal.sh"
 
 func CreateBoot2DockerDaemon() *os.File {
 
-	type Foo struct {
+	type Boot2DockerTemplate struct {
 		Version string
 	}
 	daemon, err := templatesBootlocalShBytes()
@@ -36,7 +40,7 @@ func CreateBoot2DockerDaemon() *os.File {
 	if err != nil {
 		log.Fatalf("CreateBoot2DockerDaemon template failed:", err.Error())
 	}
-	someStruct := Foo{Version: version.Version}
+	someStruct := Boot2DockerTemplate{Version: version.Version}
 	file, _ := ioutil.TempFile("/tmp", "parity")
 	file.Chmod(0655)
 	err = tmpl.Execute(file, someStruct)
@@ -47,8 +51,25 @@ func CreateBoot2DockerDaemon() *os.File {
 }
 
 func dockerHost() string {
-	return "docker"
+	host, _ := url.Parse(os.Getenv("DOCKER_HOST"))
+	return strings.Split(host.Host, ":")[0]
 }
+func dockerMachineName() string {
+	return os.Getenv("DOCKER_MACHINE_NAME")
+}
+
+func dockerCertPath() string {
+	return fmt.Sprintf("%s/id_rsa", os.Getenv("DOCKER_CERT_PATH"))
+}
+
+func dockerClient() *dockerclient.Client {
+	client, err := dockerclient.NewClientFromEnv()
+	if err != nil {
+		log.Fatalf("Unabled to create a Docker Client: Is Docker Machine installed and running?")
+	}
+	return client
+}
+
 func dockerPort() string {
 	return "22"
 }
@@ -111,26 +132,6 @@ func RunCommand(host string, command string, reader io.Reader, stdOut io.Writer,
 	session.Stdout = stdOut
 	session.Stdin = reader
 	session.Stderr = stdErr
-	/*
-		stdin, err := session.StdinPipe()
-		if err != nil {
-			return fmt.Errorf("Unable to setup stdin for session: %v", err)
-		}
-		go io.Copy(stdin, reader)
-
-		stdout, err := session.StdoutPipe()
-		if err != nil {
-			return fmt.Errorf("Unable to setup stdout for session: %v", err)
-		}
-		go io.Copy(stdOut, stdout)
-
-		stderr, err := session.StderrPipe()
-		if err != nil {
-			return fmt.Errorf("Unable to setup stderr for session: %v", err)
-		}
-		go io.Copy(stdErr, stderr)
-	*/
-
 	err = session.Run(command)
 
 	return nil
@@ -185,7 +186,7 @@ WaitLoop:
 			log.Println("Connected to", name)
 			break WaitLoop
 		case <-time.After(60 * time.Second):
-			log.Fatalf("Unable to connect to", name, "Is Docker running?")
+			log.Fatalf("Unable to connect to %s %s", name, "Is Docker running?")
 		}
 	}
 
@@ -197,7 +198,13 @@ func FindSharedFolders() []string {
 	if err != nil {
 		log.Println("Unable to determine Virtualbox shared folders, please manually ensure shared folders are removed to ensure proper operation of Parity")
 	}
-	return strings.Split(sharesRes, "\n")
+	shares := make([]string, 0)
+	for _, s := range strings.Split(sharesRes, "\n") {
+		if s != "" {
+			shares = append(shares, s)
+		}
+	}
+	return shares
 
 }
 
@@ -205,14 +212,48 @@ func UnmountSharedFolders() {
 	shares := FindSharedFolders()
 	for _, s := range shares {
 		share := strings.TrimSpace(s)
-		if share != "" {
-			RunCommandWithDefaults(DockerHost(), fmt.Sprintf(`sudo umount "%s"`, share))
-		}
+		RunCommandWithDefaults(DockerHost(), fmt.Sprintf(`sudo umount "%s"`, share))
 	}
 }
 func CheckSharedFolders(ui cli.Ui) bool {
-	res, err := ui.Ask("For Parity to operate properly, Virtualbox shares must be removed. Would you like us to automatically do this for you? (yes/no)")
-	return err == nil && res == "yes"
+	shares := FindSharedFolders()
+	if len(shares) > 0 {
+		fmt.Printf("%v", shares)
+		res, err := ui.Ask("For Parity to operate properly, Virtualbox shares must be removed. Would you like us to automatically do this for you? (yes/no)")
+		return err == nil && res == "yes"
+	}
+	return false
+}
+
+func interactiveDocker() {
+	//client := dockerClient()
+	//container, err := client.CreateContainer(createContainerOptions)
+
+}
+
+func ReadComposeVolumes() []string {
+	volumes := make([]string, 0)
+	log.Println("Reading compose file")
+	project, err := docker.NewProject(&docker.Context{
+		Context: project.Context{
+			ComposeFiles: []string{"docker-compose.yml"},
+			ProjectName:  "my-compose",
+		},
+	})
+	if err != nil {
+		log.Println("Could not parse compose file")
+	}
+	for _, c := range project.Configs {
+		for _, v := range c.Volumes {
+			v = strings.SplitN(v, ":", 2)[0]
+			if v == "." {
+				v, _ = os.Getwd()
+			}
+			volumes = append(volumes, v)
+		}
+	}
+
+	return volumes
 }
 
 func InstallParity(ui cli.Ui) {
