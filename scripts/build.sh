@@ -25,6 +25,9 @@ fi
 XC_ARCH=${XC_ARCH:-"386 amd64"}
 XC_OS=${XC_OS:-linux darwin windows freebsd}
 
+echo "==> Go version?"
+go version
+
 # Install dependencies
 echo "==> Getting dependencies..."
 go get -d -v -p 2 ./...
