@@ -5,7 +5,7 @@ build:
         - script:
             name: go get
             code: |
-                go get -t ./...
+                go get -d -v -p 2 ./...
         - script:
             name: go test
             code: |
