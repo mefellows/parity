@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: tcnksm/gox
+box: golang
 
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
@@ -47,6 +47,10 @@ build:
         code: |
           go test ./...
 
+deploy:
+  box: tcnksm/gox
+  steps:
+    
     - tcnksm/gox
 
     - tcnksm/zip:
