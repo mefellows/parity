@@ -27,7 +27,7 @@ XC_OS=${XC_OS:-linux darwin windows freebsd openbsd}
 
 # Install dependencies
 echo "==> Getting dependencies..."
-go get ./...
+go get -d -v -p 2 ./...
 
 # Delete the old dir
 echo "==> Removing old directory..."
