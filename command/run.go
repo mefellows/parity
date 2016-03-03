@@ -3,17 +3,18 @@ package command
 import (
 	"flag"
 	"fmt"
-	_ "github.com/mefellows/mirror/filesystem/fs"
-	_ "github.com/mefellows/mirror/filesystem/remote"
-	pki "github.com/mefellows/mirror/pki"
-	sync "github.com/mefellows/mirror/sync"
-	"github.com/mefellows/parity/install"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 	"regexp"
 	"strings"
+
+	_ "github.com/mefellows/mirror/filesystem/fs"
+	_ "github.com/mefellows/mirror/filesystem/remote"
+	pki "github.com/mefellows/mirror/pki"
+	sync "github.com/mefellows/mirror/sync"
+	"github.com/mefellows/parity/install"
 )
 
 type excludes []regexp.Regexp
@@ -95,8 +96,8 @@ func (c *RunCommand) Run(args []string) int {
 
 	options := &sync.Options{Exclude: c.Exclude}
 	for _, v := range volumes {
-		c.Meta.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v)))
-		err = sync.Sync(v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v), options)
+		c.Meta.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s/%s", install.MirrorHost(), v)))
+		err = sync.Sync(v, fmt.Sprintf("mirror://%s/%s", install.MirrorHost(), v), options)
 		if err != nil {
 			c.Meta.Ui.Error(fmt.Sprintf("Error during initial file sync: %v", err))
 			return 1
@@ -105,7 +106,7 @@ func (c *RunCommand) Run(args []string) int {
 
 	for _, v := range volumes {
 		c.Meta.Ui.Output(fmt.Sprintf("Monitoring '%s' for changes", v))
-		go sync.Watch(v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v), options)
+		go sync.Watch(v, fmt.Sprintf("mirror://%s/%s", install.MirrorHost(), v), options)
 	}
 
 	sigChan := make(chan os.Signal, 1)
@@ -119,15 +120,15 @@ func (c *RunCommand) Run(args []string) int {
 
 func (c *RunCommand) Help() string {
 	helpText := `
-Usage: parity run [options] 
+Usage: parity run [options]
 
   Runs Parity file watcher
-  
+
 Options:
 
   --src                       The source directory from which to copy from. Defaults to current dir.
   --dest                      The destination directory from which to copy to. Defaults to mirror://docker:8123/<curdir>.
-  --exclude                   A regular expression used to exclude files and directories that match. 
+  --exclude                   A regular expression used to exclude files and directories that match.
                               This is a special option that may be specified multiple times.
   --verbose                   Enable verbose logging.
 `

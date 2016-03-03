@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,20 +26,20 @@ const bootlocalTemplateFile = "templates/bootlocal.sh"
 const daemonTemplateFile = "templates/mirror-daemon.sh"
 const TMP_FILE = "/tmp/bootlocal.sh"
 
-func CreateBoot2DockerDaemon() *os.File {
+func CreateTemplateTempFile(data func() ([]byte, error)) *os.File {
 
-	type Boot2DockerTemplate struct {
+	type FileTemplate struct {
 		Version string
 	}
-	daemon, err := templatesBootlocalShBytes()
+	daemon, err := data()
 	if err != nil {
-		log.Fatalf("CreateBoot2DockerDaemon template failed:", err.Error())
+		log.Fatalf("Template failed:", err.Error())
 	}
 	tmpl, err := template.New("boot2docker daemon").Parse(string(daemon))
 	if err != nil {
-		log.Fatalf("CreateBoot2DockerDaemon template failed:", err.Error())
+		log.Fatalf("Template failed:", err.Error())
 	}
-	someStruct := Boot2DockerTemplate{Version: version.Version}
+	someStruct := FileTemplate{Version: version.Version}
 	file, _ := ioutil.TempFile("/tmp", "parity")
 	file.Chmod(0655)
 	err = tmpl.Execute(file, someStruct)
@@ -51,15 +50,19 @@ func CreateBoot2DockerDaemon() *os.File {
 }
 
 func dockerHost() string {
-	host, _ := url.Parse(os.Getenv("DOCKER_HOST"))
-	return strings.Split(host.Host, ":")[0]
+	// host, _ := url.Parse(os.Getenv("DOCKER_HOST"))
+	// return strings.Split(host.Host, ":")[0]
+	return "192.168.99.100"
 }
 func dockerMachineName() string {
-	return os.Getenv("DOCKER_MACHINE_NAME")
+	// return os.Getenv("DOCKER_MACHINE_NAME")
+	return "default"
 }
 
-func dockerCertPath() string {
-	return fmt.Sprintf("%s/id_rsa", os.Getenv("DOCKER_CERT_PATH"))
+func dockerCertPath(host string) string {
+	// return fmt.Sprintf("%s/id_rsa", os.Getenv("DOCKER_CERT_PATH"))
+	log.Println("Connecting to", DockerHost(), "with", fmt.Sprintf(`\Users\08697680\.docker\machine\machines\%s\id_rsa`, host))
+	return fmt.Sprintf(`\Users\08697680\.docker\machine\machines\%s\id_rsa`, host)
 }
 
 func dockerClient() *dockerclient.Client {
@@ -141,7 +144,8 @@ func SshConfig() *ssh.ClientConfig {
 	return &ssh.ClientConfig{
 		User: "docker",
 		Auth: []ssh.AuthMethod{
-			PublicKeyFile(fmt.Sprintf("%s/.docker/machine/machines/%s/id_rsa", os.Getenv("HOME"), "dev")),
+			PublicKeyFile(dockerCertPath(dockerMachineName())),
+			// PublicKeyFile(fmt.Sprintf("%s/.docker/machine/machines/%s/id_rsa", os.Getenv("HOME"), "dev")),
 		},
 	}
 }
@@ -185,7 +189,7 @@ WaitLoop:
 		case <-waitDone:
 			log.Println("Connected to", name)
 			break WaitLoop
-		case <-time.After(60 * time.Second):
+		case <-time.After(120 * time.Second):
 			log.Fatalf("Unable to connect to %s %s", name, "Is Docker running?")
 		}
 	}
@@ -259,22 +263,32 @@ func ReadComposeVolumes() []string {
 
 func InstallParity(ui cli.Ui) {
 	// Create the install mirror daemon template
-	file := CreateBoot2DockerDaemon()
+	file := CreateTemplateTempFile(templatesBootlocalShBytes)
 	session, err := SshSession(DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Printf("Installing files on Docker Host")
+	log.Printf("Installing bootlocal.sh on Docker Host")
 	remoteTmpFile := fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
 	session.Close()
+
+	file = CreateTemplateTempFile(templatesMirrorDaemonShBytes)
 	session, err = SshSession(DockerHost())
-	err = scp.CopyPath("./templates/mirror-daemon.sh", remoteTmpFile, session)
+	if err != nil {
+		log.Fatalf("Unable to connect to Docker DockerHost(). Is Docker running? (%v)", err.Error())
+	}
+
+	log.Printf("Installing mirror-daemon.sh on Docker Host")
+	remoteTmpFile = fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
+	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/mirror-daemon.sh"))
+	session.Close()
 
 	log.Println("Downloading file sync utility (mirror)")
+	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo chmod +x /var/lib/boot2docker/*.sh"))
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
 
 	log.Println("Restarting Docker")
