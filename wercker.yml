@@ -1,4 +1,4 @@
-box: tcnksm/gox
+box: mefellows/gox
 build:
     steps:
         - setup-go-workspace
