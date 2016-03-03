@@ -9,7 +9,7 @@ build:
         - script:
             name: go test
             code: |
-                go test ./...
+                make test
         - script:
             name: Publish Coveralls
             code: goveralls -service="wercker.com" -coverprofile=profile.cov -repotoken $COVERALLS_TOKEN
