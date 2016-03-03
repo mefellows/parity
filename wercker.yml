@@ -6,13 +6,13 @@ build:
             name: go get
             code: |
                 go get -d -v -p 2 ./...
-        # - script:
-        #     name: go test
-        #     code: |
-        #         go test ./...
-        # - script:
-        #     name: Publish Coveralls
-        #     code: goveralls -service="wercker.com" -coverprofile=profile.cov -repotoken $COVERALLS_TOKEN
+        - script:
+            name: go test
+            code: |
+                go test ./...
+        - script:
+            name: Publish Coveralls
+            code: goveralls -service="wercker.com" -coverprofile=profile.cov -repotoken $COVERALLS_TOKEN
         - script:
             name: gox build
             code: |

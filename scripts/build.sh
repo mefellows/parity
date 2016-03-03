@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # This script builds the application from source for multiple platforms.
-set -e
 
 # Get the parent directory of where this script is.
 SOURCE="${BASH_SOURCE[0]}"
@@ -25,22 +24,18 @@ fi
 XC_ARCH=${XC_ARCH:-"386 amd64"}
 XC_OS=${XC_OS:-linux darwin windows freebsd}
 
-echo "==> Go version?"
-go version
+VERSION=$(go version)
+echo "==> Go version #{VERSION}"
 
-# Install dependencies
 echo "==> Getting dependencies..."
 export GO15VENDOREXPERIMENT=1
 go get -d -v -p 2 ./...
 
-
-# Delete the old dir
 echo "==> Removing old directory..."
 rm -f bin/*
 rm -rf pkg/*
 mkdir -p bin/
 
-# Build!
 echo "==> Building..."
 set +e
 gox \
@@ -50,14 +45,6 @@ gox \
     -output "pkg/{{.OS}}_{{.Arch}}/{{.Dir}}" \
     ./...
 set -e
-
-# Make sure "packer-packer" is renamed properly
-#for PLATFORM in $(find ./pkg -mindepth 1 -maxdepth 1 -type d); do
-#    set +e
-#    mv ${PLATFORM}/packer-packer.exe ${PLATFORM}/packer.exe 2>/dev/null
-#    mv ${PLATFORM}/packer-packer ${PLATFORM}/packer 2>/dev/null
-#    set -e
-#done
 
 # Move all the compiled things to the $GOPATH/bin
 GOPATH=${GOPATH:-$(go env GOPATH)}
@@ -78,7 +65,6 @@ for F in $(find ${DEV_PLATFORM} -mindepth 1 -maxdepth 1 -type f); do
     cp ${F} ${MAIN_GOPATH}/bin/
 done
 
-# Done!
 echo
 echo "==> Results:"
 ls -hl bin/
