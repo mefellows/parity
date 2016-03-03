@@ -30,7 +30,9 @@ go version
 
 # Install dependencies
 echo "==> Getting dependencies..."
+export GO15VENDOREXPERIMENT=1
 go get -d -v -p 2 ./...
+
 
 # Delete the old dir
 echo "==> Removing old directory..."
