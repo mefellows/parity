@@ -3,7 +3,8 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang
+box: tcnksm/gox
+
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -18,16 +19,6 @@ box: golang
     # http://devcenter.wercker.com/docs/services/mongodb.html
 
 # The container definition we want to use for developing our app
-box: golang
-# Defining the dev pipeline
-dev:
-  steps:
-    - internal/watch:
-        code: |
-          go build ./...
-          ./source
-        reload: true
-            
 build:
   # The steps that will be executed on build
   # Steps make up the actions in your pipeline
@@ -55,3 +46,16 @@ build:
         name: go test
         code: |
           go test ./...
+
+    - tcnksm/gox
+
+    - tcnksm/zip:
+        input: $WERCKER_OUTPUT_DIR/pkg
+        output: $WERCKER_OUTPUT_DIR/dist
+
+    - tcnksm/ghr:
+        token: $GITHUB_TOKENs
+        input: dist
+        version: v0.1.0         # Relase tag default is `pre-release`
+        pre_release: true       # Relase as pre-release default is false
+        replace: true           # Replace release if it exists
