@@ -20,12 +20,16 @@ if [ "${TF_DEV}x" != "x" ]; then
     XC_ARCH=${XC_ARCH:-$(go env GOARCH)}
 fi
 
+# Build assets
+echo "==> Embedding binary assets"
+go-bindata  --pkg install --o install/assets.go templates/
+
 # Determine the arch/os combos we're building for
 XC_ARCH=${XC_ARCH:-"386 amd64"}
 XC_OS=${XC_OS:-linux darwin windows freebsd}
 
 VERSION=$(go version)
-echo "==> Go version #{VERSION}"
+echo "==> Go version ${VERSION}"
 
 echo "==> Getting dependencies..."
 export GO15VENDOREXPERIMENT=1
