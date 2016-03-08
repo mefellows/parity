@@ -309,7 +309,7 @@ func InstallParity(ui cli.Ui) {
 		UnmountSharedFolders()
 	}
 
-	log.Println("Parity installed. Run 'parity up' to to get started!")
+	log.Println("Parity installed. Run 'parity run' to to get started!")
 }
 
 func CreateDockerMachine() {

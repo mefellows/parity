@@ -24,9 +24,12 @@ func (e *excludes) String() string {
 
 func (e *excludes) Set(value string) error {
 	r, err := regexp.CompilePOSIX(value)
-	if err != nil {
+	if err == nil {
 		*e = append(*e, *r)
+	} else {
+		log.Println("Error:", err.Error())
 	}
+
 	return nil
 }
 
@@ -44,6 +47,7 @@ func (c *RunCommand) Run(args []string) int {
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
 	dir, _ := os.Getwd()
+	c.Exclude = make([]regexp.Regexp, 0)
 	cmdFlags.StringVar(&c.Src, "src", dir, "The src location to copy from")
 	cmdFlags.StringVar(&c.Dest, "dest", fmt.Sprintf("%s%s", install.DockerHost(), dir), "The destination location to copy the contents of 'src' to.")
 	cmdFlags.Var(&c.Exclude, "exclude", "Set of exclusions as POSIX regular expressions to exclude from the transfer")
@@ -119,15 +123,15 @@ func (c *RunCommand) Run(args []string) int {
 
 func (c *RunCommand) Help() string {
 	helpText := `
-Usage: parity run [options] 
+Usage: parity run [options]
 
   Runs Parity file watcher
-  
+
 Options:
 
   --src                       The source directory from which to copy from. Defaults to current dir.
   --dest                      The destination directory from which to copy to. Defaults to mirror://docker:8123/<curdir>.
-  --exclude                   A regular expression used to exclude files and directories that match. 
+  --exclude                   A regular expression used to exclude files and directories that match.
                               This is a special option that may be specified multiple times.
   --verbose                   Enable verbose logging.
 `
