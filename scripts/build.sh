@@ -22,6 +22,7 @@ fi
 
 # Build assets
 echo "==> Embedding binary assets"
+go get github.com/jteeuwen/go-bindata/...
 go-bindata  --pkg install --o install/assets.go templates/
 
 # Determine the arch/os combos we're building for
