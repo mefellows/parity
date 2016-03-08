@@ -16,6 +16,7 @@ import (
 
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
+	// "github.com/docker/machine/libmachine"
 	dockerclient "github.com/fsouza/go-dockerclient"
 	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"
@@ -27,20 +28,20 @@ const bootlocalTemplateFile = "templates/bootlocal.sh"
 const daemonTemplateFile = "templates/mirror-daemon.sh"
 const TMP_FILE = "/tmp/bootlocal.sh"
 
-func CreateBoot2DockerDaemon() *os.File {
+func CreateTemplateTempFile(data func() ([]byte, error)) *os.File {
 
-	type Boot2DockerTemplate struct {
+	type FileTemplate struct {
 		Version string
 	}
-	daemon, err := templatesBootlocalShBytes()
+	daemon, err := data()
 	if err != nil {
-		log.Fatalf("CreateBoot2DockerDaemon template failed:", err.Error())
+		log.Fatalf("Template failed:", err.Error())
 	}
 	tmpl, err := template.New("boot2docker daemon").Parse(string(daemon))
 	if err != nil {
-		log.Fatalf("CreateBoot2DockerDaemon template failed:", err.Error())
+		log.Fatalf("Template failed:", err.Error())
 	}
-	someStruct := Boot2DockerTemplate{Version: version.Version}
+	someStruct := FileTemplate{Version: version.Version}
 	file, _ := ioutil.TempFile("/tmp", "parity")
 	file.Chmod(0655)
 	err = tmpl.Execute(file, someStruct)
@@ -258,21 +259,41 @@ func ReadComposeVolumes() []string {
 }
 
 func InstallParity(ui cli.Ui) {
+	// Check - is there a Docker Machine created?
+
+	//    -> If so, use the currently selected machine
+
+	//    -> If not, create another machine
+
+	//    -> Persist these settings in ~/.parityrc?
+
+	// Wrap the local Docker command so that we don't have to use Docker Machine all of the time!
+
 	// Create the install mirror daemon template
-	file := CreateBoot2DockerDaemon()
+	// Create the install mirror daemon template
+	file := CreateTemplateTempFile(templates_bootlocal_sh_bytes)
 	session, err := SshSession(DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Printf("Installing files on Docker Host")
+	log.Printf("Installing bootlocal.sh on Docker Host")
 	remoteTmpFile := fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
 	session.Close()
+
+	file = CreateTemplateTempFile(templates_mirror_daemon_sh_bytes)
 	session, err = SshSession(DockerHost())
-	err = scp.CopyPath("./templates/mirror-daemon.sh", remoteTmpFile, session)
+	if err != nil {
+		log.Fatalf("Unable to connect to Docker DockerHost(). Is Docker running? (%v)", err.Error())
+	}
+
+	log.Printf("Installing mirror-daemon.sh on Docker Host")
+	remoteTmpFile = fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
+	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/mirror-daemon.sh"))
+	session.Close()
 
 	log.Println("Downloading file sync utility (mirror)")
 	RunCommandWithDefaults(DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
@@ -289,4 +310,8 @@ func InstallParity(ui cli.Ui) {
 	}
 
 	log.Println("Parity installed. Run 'parity up' to to get started!")
+}
+
+func CreateDockerMachine() {
+
 }

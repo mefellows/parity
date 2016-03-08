@@ -1,0 +1,353 @@
+{
+	"ImportPath": "github.com/mefellows/parity",
+	"GoVersion": "go1.6",
+	"Deps": [
+		{
+			"ImportPath": "github.com/docker/libcompose/docker",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/logger",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/lookup",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/project",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/utils",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/Sirupsen/logrus",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/cloudfoundry-incubator/candiedyaml",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/distribution",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/api",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/builder",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/cliconfig",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/daemon/graphdriver",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/image",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/layer",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/opts",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/archive",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/chrootarchive",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/fileutils",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/gitutils",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/homedir",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/httputils",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/idtools",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/ioutils",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/jsonlog",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/jsonmessage",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/mflag",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/mount",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/pools",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/progress",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/promise",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/random",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/reexec",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/signal",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/stdcopy",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/streamformatter",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/stringid",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/symlink",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/system",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/tarsum",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/term",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/urlutil",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/pkg/version",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/reference",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/registry",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/docker/runconfig/opts",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/engine-api/client",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/engine-api/types",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/go-connections/nat",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/go-connections/sockets",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/go-connections/tlsconfig",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/go-units",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/docker/libtrust",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/flynn/go-shlex",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/gorilla/context",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/gorilla/mux",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/opencontainers/runc/libcontainer/user",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/vbatts/tar-split/archive/tar",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/vbatts/tar-split/tar/asm",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/github.com/vbatts/tar-split/tar/storage",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/vendor/golang.org/x/net/context",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/docker/libcompose/version",
+			"Comment": "v0.1.0-8-g3ca1521",
+			"Rev": "3ca15215f36154fbf64f15bfa305bfb0cebb6ca7"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "a49c8269a6899cae30da1f8a4b82e0ce945f9967"
+		},
+		{
+			"ImportPath": "github.com/mefellows/mirror/filesystem",
+			"Comment": "pre-release-10-g8a7f2b3",
+			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
+		},
+		{
+			"ImportPath": "github.com/mefellows/mirror/mirror",
+			"Comment": "pre-release-10-g8a7f2b3",
+			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
+		},
+		{
+			"ImportPath": "github.com/mefellows/mirror/pki",
+			"Comment": "pre-release-10-g8a7f2b3",
+			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
+		},
+		{
+			"ImportPath": "github.com/mefellows/mirror/sync",
+			"Comment": "pre-release-10-g8a7f2b3",
+			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/cli",
+			"Rev": "8102d0ed5ea2709ade1243798785888175f6e415"
+		},
+		{
+			"ImportPath": "github.com/tmc/scp",
+			"Rev": "8734282bd23b160cc07954a157106fe59e0f3993"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh",
+			"Comment": "null-236",
+			"Rev": "69e2a90ed92d03812364aeb947b7068dc42e561e"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Comment": "v1.2.9",
+			"Rev": "8611c35ab31c1c28aa903d33cf8b6e44a399b09e"
+		}
+	]
+}
