@@ -17,7 +17,6 @@ import (
 	"github.com/docker/libcompose/project"
 	// "github.com/docker/machine/libmachine"
 	dockerclient "github.com/fsouza/go-dockerclient"
-	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"
 	"golang.org/x/crypto/ssh"
 )
@@ -26,12 +25,9 @@ const bootlocalTemplateFile = "templates/bootlocal.sh"
 const daemonTemplateFile = "templates/mirror-daemon.sh"
 const TMP_FILE = "/tmp/bootlocal.sh"
 
-// Create a temporary file given a go-bindata function
-func CreateTemplateTempFile(data func() ([]byte, error), perms os.FileMode) *os.File {
-	type FileTemplate struct {
-		Version string
-	}
-
+// Resurrect a go-bindata asset and execute the template (if any) it contains.
+// return a reference to the temporary file
+func CreateTemplateTempFile(data func() ([]byte, error), perms os.FileMode, templateData interface{}) *os.File {
 	daemon, err := data()
 	if err != nil {
 		log.Fatalf("Template failed:", err.Error())
@@ -42,11 +38,10 @@ func CreateTemplateTempFile(data func() ([]byte, error), perms os.FileMode) *os.
 		log.Fatalf("Template failed:", err.Error())
 	}
 
-	someStruct := FileTemplate{Version: version.Version}
 	file, _ := ioutil.TempFile("/tmp", "parity")
 	file.Chmod(perms)
 
-	err = tmpl.Execute(file, someStruct)
+	err = tmpl.Execute(file, templateData)
 	if err != nil {
 		panic(err)
 	}
@@ -60,6 +55,7 @@ func dockerHost() string {
 	return strings.Split(host.Host, ":")[0]
 }
 
+// Get the user required to connect to the remote Docker host
 func dockerUser() string {
 	return "docker"
 }
@@ -103,6 +99,7 @@ func MirrorHost() string {
 	return fmt.Sprintf("%s:%s", dockerHost(), mirrorPort())
 }
 
+// Create an SSH Session for a remote Docker host
 func SshSession(host string) (session *ssh.Session, err error) {
 	config := SshConfig()
 	connection, err := ssh.Dial("tcp", host, config)
@@ -116,13 +113,15 @@ func SshSession(host string) (session *ssh.Session, err error) {
 	return session, nil
 }
 
+// Run a command on a host using the default configuration for I/O redirection
 func RunCommandWithDefaults(host string, command string) error {
 	return RunCommand(host, command, os.Stdin, os.Stdout, os.Stderr)
 }
 
+// Run a command on a given SSH Connection and return the output of Stdout
 func RunCommandAndReturn(host string, command string) (string, error) {
 	var output bytes.Buffer
-	RunCommand(DockerHost(), command, os.Stdin, &output, os.Stderr)
+	RunCommand(host, command, os.Stdin, &output, os.Stderr)
 	return output.String(), nil
 }
 
@@ -214,6 +213,7 @@ WaitLoop:
 	return
 }
 
+// Get the list of shared folders on the remote Docker Host
 func FindSharedFolders() []string {
 	sharesRes, err := RunCommandAndReturn(DockerHost(), "mount | grep 'type vboxsf' | awk '{print $3}'")
 	if err != nil {
@@ -226,9 +226,9 @@ func FindSharedFolders() []string {
 		}
 	}
 	return shares
-
 }
 
+// Unmount all shared folders on the remote Docker host
 func UnmountSharedFolders() {
 	shares := FindSharedFolders()
 	for _, s := range shares {
@@ -236,6 +236,8 @@ func UnmountSharedFolders() {
 		RunCommandWithDefaults(DockerHost(), fmt.Sprintf(`sudo umount "%s"`, share))
 	}
 }
+
+// Return true if shared folders exist and the user agrees to removing them
 func CheckSharedFolders(ui cli.Ui) bool {
 	shares := FindSharedFolders()
 	if len(shares) > 0 {
@@ -252,8 +254,8 @@ func interactiveDocker() {
 
 }
 
-func FindDockerComposeFiles() {
-
+func FindDockerComposeFiles() []string {
+	return []string{"docker-compose.yml"}
 }
 
 // Read a docker-compose.yml and return a slice of
@@ -262,25 +264,29 @@ func FindDockerComposeFiles() {
 // "." is converted to the current directory parity is running from
 func ReadComposeVolumes(path string) []string {
 	volumes := make([]string, 0)
-	if _, err := os.Stat(path); err == nil {
-		project, err := docker.NewProject(&docker.Context{
-			Context: project.Context{
-				ComposeFiles: []string{"docker-compose.yml"},
-				ProjectName:  "my-compose",
-			},
-		})
 
-		if err != nil {
-			log.Println("Could not parse compose file")
-		}
+	files := FindDockerComposeFiles()
+	for i, file := range files {
+		if _, err := os.Stat(path); err == nil {
+			project, err := docker.NewProject(&docker.Context{
+				Context: project.Context{
+					ComposeFiles: []string{file},
+					ProjectName:  fmt.Sprintf("parity-", i),
+				},
+			})
 
-		for _, c := range project.Configs {
-			for _, v := range c.Volumes {
-				v = strings.SplitN(v, ":", 2)[0]
-				if v == "." {
-					v, _ = os.Getwd()
+			if err != nil {
+				log.Println("Could not parse compose file")
+			}
+
+			for _, c := range project.Configs {
+				for _, v := range c.Volumes {
+					v = strings.SplitN(v, ":", 2)[0]
+					if v == "." {
+						v, _ = os.Getwd()
+					}
+					volumes = append(volumes, v)
 				}
-				volumes = append(volumes, v)
 			}
 		}
 	}

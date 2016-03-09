@@ -1,15 +1,75 @@
 package install
 
 import (
+	"fmt"
 	"github.com/mefellows/parity/utils"
+	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"
+	"github.com/mitchellh/multistep"
 	"github.com/tmc/scp"
 	"log"
-	"fmt"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"time"
 )
 
+type stepAdd struct{}
+
+func (s *stepAdd) Run(state multistep.StateBag) multistep.StepAction {
+	// Read our value and assert that it is they type we want
+	value := state.Get("value").(int)
+	fmt.Printf("Value is %d\n", value)
+	time.Sleep(5 * time.Second)
+
+	// Store some state back
+	state.Put("value", value+1)
+	return multistep.ActionContinue
+}
+
+func (s *stepAdd) Cleanup(multistep.StateBag) {
+	// This is called after all the steps have run or if the runner is
+	// cancelled so that cleanup can be performed.
+	fmt.Println("Cleaning up some step...")
+}
+
 func InstallParity(ui cli.Ui) {
+	done := make(chan bool)
+	// Interrupt handler
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, os.Kill)
+
+	// Our "bag of state" that we read the value from
+	state := new(multistep.BasicStateBag)
+	state.Put("value", 0)
+
+	steps := []multistep.Step{
+		&stepAdd{},
+		&stepAdd{},
+		&stepAdd{},
+	}
+
+	runner := &multistep.BasicRunner{Steps: steps}
+
+	go func() {
+		// Executes the steps
+		runner.Run(state)
+		<-done
+	}()
+
+	select {
+	case <-done:
+		fmt.Println("Done stepping stuff")
+	case <-sigChan:
+		fmt.Println("Cancel signal arrived...")
+
+		// Wrap this in an interruptable mechanism
+		runner.Cancel()
+	}
+
+	fmt.Println("chan completed!")
+	os.Exit(0)
+
 	// Check - is there a Docker Machine created?
 
 	//    -> If so, use the currently selected machine
@@ -20,9 +80,13 @@ func InstallParity(ui cli.Ui) {
 
 	// Wrap the local Docker command so that we don't have to use Docker Machine all of the time!
 
+	type FileTemplate struct {
+		Version string
+	}
+	templateData := FileTemplate{Version: version.Version}
+
 	// Create the install mirror daemon template
-	// Create the install mirror daemon template
-	file := utils.CreateTemplateTempFile(templatesBootlocalShBytes, 0666)
+	file := utils.CreateTemplateTempFile(templatesBootlocalShBytes, 0666, templateData)
 	session, err := utils.SshSession(utils.DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
@@ -34,7 +98,7 @@ func InstallParity(ui cli.Ui) {
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
 	session.Close()
 
-	file = utils.CreateTemplateTempFile(templatesMirrorDaemonShBytes, 0666)
+	file = utils.CreateTemplateTempFile(templatesMirrorDaemonShBytes, 0666, templateData)
 	session, err = utils.SshSession(utils.DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
