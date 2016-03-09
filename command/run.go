@@ -7,7 +7,7 @@ import (
 	_ "github.com/mefellows/mirror/filesystem/remote"
 	pki "github.com/mefellows/mirror/pki"
 	sync "github.com/mefellows/mirror/sync"
-	"github.com/mefellows/parity/install"
+	"github.com/mefellows/parity/utils"
 	"io/ioutil"
 	"log"
 	"os"
@@ -49,7 +49,7 @@ func (c *RunCommand) Run(args []string) int {
 	dir, _ := os.Getwd()
 	c.Exclude = make([]regexp.Regexp, 0)
 	cmdFlags.StringVar(&c.Src, "src", dir, "The src location to copy from")
-	cmdFlags.StringVar(&c.Dest, "dest", fmt.Sprintf("%s%s", install.DockerHost(), dir), "The destination location to copy the contents of 'src' to.")
+	cmdFlags.StringVar(&c.Dest, "dest", fmt.Sprintf("%s%s", utils.DockerHost(), dir), "The destination location to copy the contents of 'src' to.")
 	cmdFlags.Var(&c.Exclude, "exclude", "Set of exclusions as POSIX regular expressions to exclude from the transfer")
 	cmdFlags.BoolVar(&c.Verbose, "verbose", false, "Enable verbose output")
 
@@ -77,15 +77,15 @@ func (c *RunCommand) Run(args []string) int {
 	}
 
 	// Removing shared folders
-	if install.CheckSharedFolders(c.Meta.Ui) {
-		install.UnmountSharedFolders()
+	if utils.CheckSharedFolders(c.Meta.Ui) {
+		utils.UnmountSharedFolders()
 	}
 
 	// Read volumes for share/watching
 	volumes := make([]string, 0)
 
 	// Exclude non-local volumes (e.g. might want to mount a dir on the VM guest)
-	for _, v := range install.ReadComposeVolumes() {
+	for _, v := range utils.ReadComposeVolumes("docker-compose.yml") {
 		if _, err := os.Stat(v); err == nil {
 			volumes = append(volumes, v)
 		}
@@ -99,8 +99,8 @@ func (c *RunCommand) Run(args []string) int {
 
 	options := &sync.Options{Exclude: c.Exclude}
 	for _, v := range volumes {
-		c.Meta.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v)))
-		err = sync.Sync(v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v), options)
+		c.Meta.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v)))
+		err = sync.Sync(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
 		if err != nil {
 			c.Meta.Ui.Error(fmt.Sprintf("Error during initial file sync: %v", err))
 			return 1
@@ -109,7 +109,7 @@ func (c *RunCommand) Run(args []string) int {
 
 	for _, v := range volumes {
 		c.Meta.Ui.Output(fmt.Sprintf("Monitoring '%s' for changes", v))
-		go sync.Watch(v, fmt.Sprintf("mirror://%s%s", install.MirrorHost(), v), options)
+		go sync.Watch(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
 	}
 
 	sigChan := make(chan os.Signal, 1)
