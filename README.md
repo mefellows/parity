@@ -40,11 +40,11 @@ brew install https://raw.githubusercontent.com/mefellows/parity/master/scripts/p
 go get github.com/mefellows/parity
 ```
 
-### Installation
+## Installation
 
 Simple run `parity install` and follow the prompts.
 
-### Running
+## Running
 
 A typical invocation would look something like this:
 
