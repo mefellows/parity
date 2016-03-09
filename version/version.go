@@ -1,3 +1,3 @@
 package version
 
-const Version = "pre-release"
+const Version = "0.0.1"

@@ -1,8 +1,9 @@
 package command
 
 import (
-	"github.com/mitchellh/cli"
 	"os"
+
+	"github.com/mitchellh/cli"
 )
 
 var Commands map[string]cli.CommandFactory
@@ -31,6 +32,9 @@ func init() {
 			return &RunCommand{
 				Meta: meta,
 			}, nil
+		},
+		"version": func() (cli.Command, error) {
+			return &VersionCommand{}, nil
 		},
 	}
 }
