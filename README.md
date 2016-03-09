@@ -42,7 +42,7 @@ go get github.com/mefellows/parity
 
 ## Installation
 
-Simple run `parity install` and follow the prompts.
+Simply run `parity install` and follow the prompts.
 
 ## Running
 
