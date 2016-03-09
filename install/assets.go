@@ -84,7 +84,7 @@ func templatesBootlocalSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/bootlocal.sh", size: 245, mode: os.FileMode(493), modTime: time.Unix(1457396388, 0)}
+	info := bindataFileInfo{name: "templates/bootlocal.sh", size: 245, mode: os.FileMode(493), modTime: time.Unix(1455790301, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +104,7 @@ func templatesMirrorDaemonSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/mirror-daemon.sh", size: 1609, mode: os.FileMode(420), modTime: time.Unix(1457396388, 0)}
+	info := bindataFileInfo{name: "templates/mirror-daemon.sh", size: 1609, mode: os.FileMode(420), modTime: time.Unix(1456652660, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

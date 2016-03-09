@@ -17,7 +17,7 @@ GIT_DIRTY=$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 # If its dev mode, only build for ourself
 if [ "${TF_DEV}x" != "x" ]; then
     XC_OS=${XC_OS:-$(go env GOOS)}
-    XC_ARCH=${XC_ARCH:-$(go env GOARCH)}
+    XC_ARCH="386 amd64"
 fi
 
 # Build assets
@@ -69,6 +69,16 @@ for F in $(find ${DEV_PLATFORM} -mindepth 1 -maxdepth 1 -type f); do
     cp ${F} bin/
     cp ${F} ${MAIN_GOPATH}/bin/
 done
+
+# If its dev mode, update the shasums in parity.rb
+if [ "${TF_DEV}x" != "x" ]; then
+    # Update parity.rb
+    echo "==> Updating ./scripts/parity.rb with latest shasums"
+    HASH32=$(shasum -a 1 pkg/darwin_386/parity | cut -d" " -f 1)
+    HASH64=$(shasum -a 1 pkg/darwin_amd64/parity | cut -d" " -f 1)
+    sed -ie "9s/sha1 '\(.*\)'/sha1 '${HASH32}'/9" scripts/parity.rb
+    sed -ie "12s/sha1 '\(.*\)'/sha1 '${HASH64}'/9" scripts/parity.rb
+fi
 
 echo
 echo "==> Results:"

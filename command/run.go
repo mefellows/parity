@@ -3,17 +3,21 @@ package command
 import (
 	"flag"
 	"fmt"
-	_ "github.com/mefellows/mirror/filesystem/fs"
-	_ "github.com/mefellows/mirror/filesystem/remote"
-	pki "github.com/mefellows/mirror/pki"
-	sync "github.com/mefellows/mirror/sync"
-	"github.com/mefellows/parity/utils"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 	"regexp"
 	"strings"
+
+	// Need these blank imports. Ideally we fix mirror to
+	// auto-export these plugins?
+	_ "github.com/mefellows/mirror/filesystem/fs"
+	_ "github.com/mefellows/mirror/filesystem/remote"
+
+	pki "github.com/mefellows/mirror/pki"
+	sync "github.com/mefellows/mirror/sync"
+	"github.com/mefellows/parity/utils"
 )
 
 type excludes []regexp.Regexp
@@ -33,6 +37,7 @@ func (e *excludes) Set(value string) error {
 	return nil
 }
 
+// RunCommand contains parameters required to configure the Parity runtime
 type RunCommand struct {
 	Meta    Meta
 	Dest    string
@@ -42,6 +47,7 @@ type RunCommand struct {
 	Verbose bool
 }
 
+// Run Parity
 func (c *RunCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("sync", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
@@ -82,7 +88,7 @@ func (c *RunCommand) Run(args []string) int {
 	}
 
 	// Read volumes for share/watching
-	volumes := make([]string, 0)
+	var volumes []string
 
 	// Exclude non-local volumes (e.g. might want to mount a dir on the VM guest)
 	for _, v := range utils.ReadComposeVolumes("docker-compose.yml") {
@@ -96,8 +102,9 @@ func (c *RunCommand) Run(args []string) int {
 	}
 
 	pki.MirrorConfig.ClientTlsConfig = config
-
 	options := &sync.Options{Exclude: c.Exclude}
+
+	// Sync and watch all volumes
 	for _, v := range volumes {
 		c.Meta.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v)))
 		err = sync.Sync(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
@@ -105,9 +112,7 @@ func (c *RunCommand) Run(args []string) int {
 			c.Meta.Ui.Error(fmt.Sprintf("Error during initial file sync: %v", err))
 			return 1
 		}
-	}
 
-	for _, v := range volumes {
 		c.Meta.Ui.Output(fmt.Sprintf("Monitoring '%s' for changes", v))
 		go sync.Watch(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
 	}
@@ -116,16 +121,19 @@ func (c *RunCommand) Run(args []string) int {
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
 	<-sigChan
-	c.Meta.Ui.Output("Received interrupt. Shutting down")
+	log.Println("Interrupt received, shutting down")
 
 	return 0
 }
 
+// Help text for the command
 func (c *RunCommand) Help() string {
 	helpText := `
 Usage: parity run [options]
 
-  Runs Parity file watcher
+  Runs Parity file watcher.
+
+	By default, Parity will parse any local docker-compose.yml file, and automatically sync the directories.
 
 Options:
 
@@ -139,6 +147,7 @@ Options:
 	return strings.TrimSpace(helpText)
 }
 
+// Synopsis for the command
 func (c *RunCommand) Synopsis() string {
 	return "Run Parity file watcher"
 }
