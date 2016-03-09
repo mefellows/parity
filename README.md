@@ -24,27 +24,27 @@ Simplify Docker for non LXC-native environments (Windows, Mac OSX) by:
 
 Additionally, Parity will not require any other external dependencies, except the Docker ecosystem.
 
-## Get Parity
+## Getting Started
 
 [Download](releases) a Parity release and put it somewhere on your `PATH`.
 
-### On Mac OSX using Homebrew
+#### On Mac OSX using Homebrew
 
 ```bash
 brew install https://raw.githubusercontent.com/mefellows/parity/master/scripts/parity.rb
 ```
 
-### Using Go Get
+#### Using Go Get
 
 ```bash
 go get github.com/mefellows/parity
 ```
 
-## Installing Parity
+### Installation
 
 Simple run `parity install` and follow the prompts.
 
-## Running Parity
+### Running
 
 A typical invocation would look something like this:
 
@@ -60,12 +60,12 @@ This will run the Parity file synchroniser tool, excluding any files containing 
 
 See `parity run --help` for more detail.
 
-## Configuring Parity with `.parityrc` files
+### Configuring Parity with `.parityrc` files
 
 If you are on a Mac and have installed the bash shims, whenever you enter a folder containing a `.parityrc` file, Parity will automatically run for you based on that configuration and begin syncing files.
 Logs will be redirected to `/tmp/parity-<project>.log` should you wish to see what's happening.
 
-### File format
+#### File format
 
 TODO
 
