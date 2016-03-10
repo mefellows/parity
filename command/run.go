@@ -68,6 +68,14 @@ func (c *RunCommand) Run(args []string) int {
 		log.SetOutput(ioutil.Discard)
 	}
 
+	// TODO: Move this into separate, testable module
+
+	// TODO: Run should do the following
+
+	// - Parse parity.yml file
+	// - Automatically sync files
+	// - Automatically run Docker/Compose
+
 	pkiMgr, err := pki.New()
 	pkiMgr.Config.Insecure = true
 
