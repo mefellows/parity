@@ -3,11 +3,12 @@ package command
 import (
 	"flag"
 	"github.com/mefellows/parity/install"
+	"github.com/mefellows/parity/config"
 	"strings"
 )
 
 type InstallCommand struct {
-	Meta Meta
+	Meta config.Meta
 	Port int // Which port to listen on
 }
 

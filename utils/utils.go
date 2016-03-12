@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/url"
 	"os"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/mefellows/parity/log"
 
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
@@ -185,7 +186,7 @@ func WaitForNetwork(name string, host string) {
 func WaitForNetworkWithTimeout(name string, host string, timeout time.Duration) {
 	waitDone := make(chan bool, 1)
 	go func() {
-		log.Println("Waiting for", name, "to become available (", host, ")")
+		log.Info("Waiting for", name, "to become available (", host, ")")
 		for {
 			select {
 			case <-time.After(5 * time.Second):
@@ -203,7 +204,7 @@ WaitLoop:
 	for {
 		select {
 		case <-waitDone:
-			log.Println("Connected to", name)
+			log.Info("Connected to", name)
 			break WaitLoop
 		case <-time.After(timeout):
 			log.Fatalf("Unable to connect to %s %s", name, "Is Docker running?")
@@ -217,7 +218,7 @@ WaitLoop:
 func FindSharedFolders() []string {
 	sharesRes, err := RunCommandAndReturn(DockerHost(), "mount | grep 'type vboxsf' | awk '{print $3}'")
 	if err != nil {
-		log.Println("Unable to determine Virtualbox shared folders, please manually ensure shared folders are removed to ensure proper operation of Parity")
+		log.Warn("Unable to determine Virtualbox shared folders, please manually ensure shared folders are removed to ensure proper operation of Parity")
 	}
 	shares := make([]string, 0)
 	for _, s := range strings.Split(sharesRes, "\n") {
@@ -276,7 +277,7 @@ func ReadComposeVolumes(path string) []string {
 			})
 
 			if err != nil {
-				log.Println("Could not parse compose file")
+				log.Info("Could not parse compose file")
 			}
 
 			for _, c := range project.Configs {

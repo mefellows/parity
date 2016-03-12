@@ -2,15 +2,16 @@ package install
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"path/filepath"
+
+	"github.com/mefellows/parity/log"
 	"github.com/mefellows/parity/utils"
 	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/multistep"
 	"github.com/tmc/scp"
-	"log"
-	"os"
-	"os/signal"
-	"path/filepath"
 )
 
 type stepAdd struct{}
@@ -28,7 +29,7 @@ func (s *stepAdd) Run(state multistep.StateBag) multistep.StepAction {
 func (s *stepAdd) Cleanup(multistep.StateBag) {
 	// This is called after all the steps have run or if the runner is
 	// cancelled so that cleanup can be performed.
-	fmt.Println("Cleaning up some step...")
+	log.Info("Cleaning up some step...")
 }
 
 func InstallParity(ui cli.Ui) {
@@ -57,15 +58,15 @@ func InstallParity(ui cli.Ui) {
 
 	select {
 	case <-done:
-		fmt.Println("Done stepping stuff")
+		log.Info("Done stepping stuff")
 	case <-sigChan:
-		fmt.Println("Cancel signal arrived...")
+		log.Info("Cancel signal arrived...")
 
 		// Wrap this in an interruptable mechanism
 		runner.Cancel()
 	}
 
-	fmt.Println("chan completed!")
+	log.Info("chan completed!")
 	// Check - is there a Docker Machine created?
 
 	//    -> If so, use the currently selected machine
@@ -88,7 +89,7 @@ func InstallParity(ui cli.Ui) {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Printf("Installing bootlocal.sh on Docker Host")
+	log.Info("Installing bootlocal.sh on Docker Host")
 	remoteTmpFile := fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
@@ -100,25 +101,25 @@ func InstallParity(ui cli.Ui) {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Printf("Installing mirror-daemon.sh on Docker Host")
+	log.Info("Installing mirror-daemon.sh on Docker Host")
 	remoteTmpFile = fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/mirror-daemon.sh"))
 	session.Close()
 
-	log.Println("Downloading file sync utility (mirror)")
+	log.Info("Downloading file sync utility (mirror)")
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
 
-	log.Println("Restarting Docker")
+	log.Info("Restarting Docker")
 	utils.RunCommandWithDefaults(utils.DockerHost(), "sudo shutdown -r now")
 	utils.WaitForNetwork("docker", utils.DockerHost())
 	utils.WaitForNetwork("mirror", utils.MirrorHost())
 
 	// Removing shared folders
 	if utils.CheckSharedFolders(ui) {
-		log.Println("Unmounting Virtualbox shared folders")
+		log.Info("Unmounting Virtualbox shared folders")
 		utils.UnmountSharedFolders()
 	}
 
-	log.Println("Parity installed. Run 'parity run' to to get started!")
+	log.Info("Parity installed. Run 'parity run' to to get started!")
 }

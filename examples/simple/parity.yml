@@ -1,0 +1,10 @@
+name: Example Parity
+loglevel: 2
+sync:
+    - name: default
+      config:
+        verbose: true
+        excludes:
+          - "tmp"
+          - "\.log$"
+          - "\.git"

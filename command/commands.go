@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/mitchellh/cli"
+	"github.com/mefellows/parity/config"
 )
 
 var Commands map[string]cli.CommandFactory
@@ -18,7 +19,7 @@ func init() {
 		ErrorColor:  cli.UiColorRed,
 	}
 
-	meta := Meta{
+	meta := config.Meta{
 		Ui: Ui,
 	}
 

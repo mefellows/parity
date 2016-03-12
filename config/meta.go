@@ -1,4 +1,4 @@
-package command
+package config
 
 import "github.com/mitchellh/cli"
 
