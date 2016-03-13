@@ -186,7 +186,7 @@ func WaitForNetwork(name string, host string) {
 func WaitForNetworkWithTimeout(name string, host string, timeout time.Duration) {
 	waitDone := make(chan bool, 1)
 	go func() {
-		log.Info("Waiting for", name, "to become available (", host, ")")
+		log.Info("Waiting for %s to become available (%s)", name, host)
 		for {
 			select {
 			case <-time.After(5 * time.Second):
@@ -263,12 +263,12 @@ func FindDockerComposeFiles() []string {
 // directories to sync into the Docker Host
 //
 // "." is converted to the current directory parity is running from
-func ReadComposeVolumes(path string) []string {
+func ReadComposeVolumes() []string {
 	volumes := make([]string, 0)
 
 	files := FindDockerComposeFiles()
 	for i, file := range files {
-		if _, err := os.Stat(path); err == nil {
+		if _, err := os.Stat(file); err == nil {
 			project, err := docker.NewProject(&docker.Context{
 				Context: project.Context{
 					ComposeFiles: []string{file},

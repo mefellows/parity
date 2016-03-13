@@ -59,7 +59,7 @@ func (p *Mirror) Sync() error {
 	var volumes []string
 
 	// Exclude non-local volumes (e.g. might want to mount a dir on the VM guest)
-	for _, v := range utils.ReadComposeVolumes("docker-compose.yml") {
+	for _, v := range utils.ReadComposeVolumes() {
 		if _, err := os.Stat(v); err == nil {
 			volumes = append(volumes, v)
 		}
@@ -81,7 +81,6 @@ func (p *Mirror) Sync() error {
 		}
 	}
 
-	log.Info("%v", excludes)
 	options := &sync.Options{Exclude: excludes}
 
 	// Sync and watch all volumes

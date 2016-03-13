@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mefellows/parity/command"
+	_ "github.com/mefellows/parity/run"
 	_ "github.com/mefellows/parity/sync"
 	"github.com/mefellows/parity/version"
 	"github.com/mitchellh/cli"

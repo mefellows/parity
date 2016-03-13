@@ -4,6 +4,9 @@ import (
 	"os"
 	"os/signal"
 
+	"strings"
+	"sync"
+
 	"github.com/mefellows/parity/log"
 
 	"github.com/mefellows/parity/config"
@@ -11,8 +14,9 @@ import (
 )
 
 type Parity struct {
-	config *config.Config
-	Sync   []Sync
+	config      *config.Config
+	SyncPlugins []Sync
+	RunPlugins  []Run
 }
 
 func (p *Parity) LoadPlugins() {
@@ -20,6 +24,7 @@ func (p *Parity) LoadPlugins() {
 	var err error
 	var confLoader *plugo.ConfigLoader
 	c := &config.RootConfig{}
+
 	if p.config.ConfigFile != "" {
 		confLoader = &plugo.ConfigLoader{}
 		err = confLoader.LoadFromFile(p.config.ConfigFile, &c)
@@ -33,13 +38,29 @@ func (p *Parity) LoadPlugins() {
 
 	// Load all plugins
 	pluginConfig := &PluginConfig{Ui: p.config.Ui}
-	p.Sync = make([]Sync, len(c.Sync))
-	plugins := plugo.LoadPluginsWithConfig(confLoader, c.Sync)
 
-	for i, pl := range plugins {
-		log.Debug("Loading plugin\t" + log.Colorize(log.YELLOW, c.Sync[i].Name))
-		p.Sync[i] = pl.(Sync)
-		p.Sync[i].Configure(pluginConfig)
+	// Set project name
+	pluginConfig.ProjectName = c.Name
+	pluginConfig.ProjectNameSafe = strings.Replace(strings.ToLower(c.Name), " ", "", -1)
+
+	// Sync plugins
+	p.SyncPlugins = make([]Sync, len(c.Sync))
+	syncPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Sync)
+
+	for i, pl := range syncPlugins {
+		log.Debug("Loading Sync Plugin\t" + log.Colorize(log.YELLOW, c.Sync[i].Name))
+		p.SyncPlugins[i] = pl.(Sync)
+		p.SyncPlugins[i].Configure(pluginConfig)
+	}
+
+	// Run plugins
+	p.RunPlugins = make([]Run, len(c.Run))
+	runPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Run)
+
+	for i, pl := range runPlugins {
+		log.Debug("Loading Run Plugin\t" + log.Colorize(log.YELLOW, c.Run[i].Name))
+		p.RunPlugins[i] = pl.(Run)
+		p.RunPlugins[i].Configure(pluginConfig)
 	}
 }
 
@@ -65,8 +86,13 @@ func (p *Parity) Run() {
 	p.LoadPlugins()
 
 	// Execute all plugins in parallel?
-	for _, pl := range p.Sync {
+	for _, pl := range p.SyncPlugins {
 		go pl.Sync()
+	}
+
+	// Execute all plugins in parallel?
+	for _, pl := range p.RunPlugins {
+		go pl.Run()
 	}
 
 	// Interrupt handler
@@ -76,7 +102,27 @@ func (p *Parity) Run() {
 	select {
 	case <-sigChan:
 		log.Debug("Received interrupt, shutting down.")
-
-		// Cancel stufff?
+		p.Teardown()
 	}
+}
+
+func (p *Parity) Teardown() {
+	group := &sync.WaitGroup{}
+
+	for _, pl := range p.SyncPlugins {
+		runAsync(group, pl.Teardown)
+	}
+
+	for _, pl := range p.RunPlugins {
+		runAsync(group, pl.Teardown)
+	}
+	group.Wait()
+}
+
+func runAsync(group *sync.WaitGroup, f func()) {
+	group.Add(1)
+	go func() {
+		f()
+		group.Done()
+	}()
 }

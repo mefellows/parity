@@ -4,6 +4,7 @@ run:
   - name: machine
     config:
       dest: testmachinedest
+      composefile: docker-compose.yml
 sync:
   - name: mirror
     config:
