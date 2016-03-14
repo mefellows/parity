@@ -49,14 +49,16 @@ Simply run `parity install` and follow the prompts.
 A typical invocation would look something like this:
 
 ```
-parity run --exclude "git" --exclude "tmp" --exclude "\.log$"
+parity init # Will create a default, sane parity.yml file
+parity run"
 ```
 
-This will run the Parity file synchroniser tool, excluding any files containing `git`, `tmp` or ending with `.log`.
+Parity will then start up your Docker Services (in `./docker-compose.yml`) and synchronise files automatically into the Docker Virtual Machine.
 
-* `--src` - The source folder to sync from. Defaults to any volumes specified in a local `docker-compose.yml` or the `$PWD` if you're not using Compose.
-* `--dest` - The destination folder to sync to. Defaults to any volumes specified in a local `docker-compose.yml` or the `$PWD` if you're not using Compose.
-* `--exclude` - a POSIX regular expression to exclude when synchronising files. Can be specified multiple times.
+By default, Parity will exclude any files containing `git`, `tmp` or ending with `.log`.
+
+* `--config` - Path to the configuration file. Defaults to `./parity.yml`.
+* `--verbose` - Enable verbose logging.
 
 See `parity run --help` for more detail.
 

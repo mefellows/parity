@@ -242,9 +242,8 @@ func UnmountSharedFolders() {
 func CheckSharedFolders(ui cli.Ui) bool {
 	shares := FindSharedFolders()
 	if len(shares) > 0 {
-		fmt.Printf("%v", shares)
-		res, err := ui.Ask("For Parity to operate properly, Virtualbox shares must be removed. Would you like us to automatically do this for you? (yes/no)")
-		return err == nil && res == "yes"
+		ui.Warn("For Parity to operate properly, Virtualbox shares must be removed. Parity will automatically do this for you")
+		return true
 	}
 	return false
 }
@@ -262,7 +261,7 @@ func FindDockerComposeFiles() []string {
 // Read a docker-compose.yml and return a slice of
 // directories to sync into the Docker Host
 //
-// "." is converted to the current directory parity is running from
+// "." and "./." is converted to the current directory parity is running from
 func ReadComposeVolumes() []string {
 	volumes := make([]string, 0)
 
@@ -283,7 +282,7 @@ func ReadComposeVolumes() []string {
 			for _, c := range project.Configs {
 				for _, v := range c.Volumes {
 					v = strings.SplitN(v, ":", 2)[0]
-					if v == "." {
+					if v == "." || v == "./." {
 						v, _ = os.Getwd()
 					}
 					volumes = append(volumes, v)

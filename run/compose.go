@@ -17,7 +17,6 @@ import (
 // DockerCompose is a type of Run Plugin, that uses Docker Compose
 // to run a local development environment
 type DockerCompose struct {
-	Dest         string
 	ComposeFile  string `default:"docker-compose.yml" required:"true" mapstructure:"composefile"`
 	pluginConfig *parity.PluginConfig
 	project      *project.Project

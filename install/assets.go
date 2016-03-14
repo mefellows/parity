@@ -2,6 +2,7 @@
 // sources:
 // templates/bootlocal.sh
 // templates/mirror-daemon.sh
+// templates/parity.yml
 // DO NOT EDIT!
 
 package install
@@ -84,7 +85,7 @@ func templatesBootlocalSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/bootlocal.sh", size: 245, mode: os.FileMode(493), modTime: time.Unix(1455790301, 0)}
+	info := bindataFileInfo{name: "templates/bootlocal.sh", size: 245, mode: os.FileMode(493), modTime: time.Unix(1457774996, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +105,27 @@ func templatesMirrorDaemonSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/mirror-daemon.sh", size: 1609, mode: os.FileMode(420), modTime: time.Unix(1456652660, 0)}
+	info := bindataFileInfo{name: "templates/mirror-daemon.sh", size: 1609, mode: os.FileMode(420), modTime: time.Unix(1457774996, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _templatesParityYml = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x6c\x51\xc1\x6a\xdb\x40\x14\xbc\xef\x57\x0c\xb8\x07\x1b\x64\xd3\xba\xed\x45\xd0\x53\xdd\x42\xc0\x09\x3e\x18\x72\xc9\x65\x2d\x3f\x49\x9b\x3c\xbd\x35\xbb\x2b\x25\xc6\xf8\xdf\xf3\x24\xcb\xe0\x80\x41\x88\xd9\xd9\xd1\xcc\xe8\xbd\x09\x36\xc1\xbf\x52\x91\xf0\x64\x1b\x32\xa2\xaf\x1c\xa7\xd3\xa2\x3f\x9d\xcf\xc6\x4c\xb0\xf6\x15\xd6\xd4\x11\x63\xfa\x1d\x7f\xb0\x0d\xb6\xa0\x0c\x3f\x14\xae\x68\xd7\x56\x19\x96\x0a\x1f\xa4\xf4\x19\x7e\x2a\x7a\xb6\x41\x32\xfc\x52\xf4\x2f\x04\x1f\x32\xfc\x56\xf8\xdf\x26\xcb\x33\xc3\xbe\xe2\xde\x29\xc7\x52\x9d\x27\xfa\x60\xc3\x6d\xe5\x04\x85\x97\xd2\x55\x6d\xb0\xc9\x79\xe9\xaf\x34\xf8\xef\xc8\x51\x44\xaa\x09\x2b\x5f\xbc\x51\x50\xb6\x39\xf8\x48\x20\xe9\x5c\xf0\xd2\x90\x24\x13\x5a\xc9\x0d\x30\xc7\xa5\x7e\x71\x91\x28\x83\xd1\x38\x1f\x30\xae\x37\xa5\x63\x95\xed\x07\xc3\xf9\xc8\x2d\x8e\x0d\xdf\x49\x8d\x47\x29\x6a\xcd\x71\x71\xa8\x36\xf6\xcd\xd0\x46\x27\x15\x1e\x5d\xff\x8f\x98\xce\xb0\x3b\x62\x4f\xa5\x6d\x39\x99\xfe\x93\xdb\x3a\xcd\x20\xba\xd3\xa6\xa3\xb0\xd3\xe4\x1c\xa5\xe5\xb1\x2e\x40\x1f\x05\xb7\x7b\xba\x6a\x7a\x9b\xd4\x1c\x6e\x4e\x2f\x0b\x1d\xe3\xb7\x2f\x44\xe5\x52\x5f\x7d\x5b\xbb\x78\x1d\xa8\x65\xf6\xef\x51\x6b\x22\x79\xc4\x9a\x98\xe1\x44\xa1\x15\xdd\x55\x22\x5d\x62\x72\x1d\x41\x51\xe3\xc4\xb2\x19\x24\xf7\x86\xf8\x19\x00\x00\xff\xff\x32\x6c\x80\xe5\x21\x02\x00\x00")
+
+func templatesParityYmlBytes() ([]byte, error) {
+	return bindataRead(
+		_templatesParityYml,
+		"templates/parity.yml",
+	)
+}
+
+func templatesParityYml() (*asset, error) {
+	bytes, err := templatesParityYmlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "templates/parity.yml", size: 545, mode: os.FileMode(420), modTime: time.Unix(1457940523, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -163,6 +184,7 @@ func AssetNames() []string {
 var _bindata = map[string]func() (*asset, error){
 	"templates/bootlocal.sh": templatesBootlocalSh,
 	"templates/mirror-daemon.sh": templatesMirrorDaemonSh,
+	"templates/parity.yml": templatesParityYml,
 }
 
 // AssetDir returns the file names below a certain
@@ -208,6 +230,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"templates": &bintree{nil, map[string]*bintree{
 		"bootlocal.sh": &bintree{templatesBootlocalSh, map[string]*bintree{}},
 		"mirror-daemon.sh": &bintree{templatesMirrorDaemonSh, map[string]*bintree{}},
+		"parity.yml": &bintree{templatesParityYml, map[string]*bintree{}},
 	}},
 }}
 

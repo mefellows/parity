@@ -24,18 +24,23 @@ func init() {
 	}
 
 	Commands = map[string]cli.CommandFactory{
+		"init": func() (cli.Command, error) {
+			return &InitCommand{
+				Meta: meta,
+			}, nil
+		},
 		"install": func() (cli.Command, error) {
 			return &InstallCommand{
 				Meta: meta,
 			}, nil
 		},
-		"run": func() (cli.Command, error) {
-			return &RunCommand{
+		"interactive": func() (cli.Command, error) {
+			return &InteractiveCommand{
 				Meta: meta,
 			}, nil
 		},
-		"interactive": func() (cli.Command, error) {
-			return &InteractiveCommand{
+		"run": func() (cli.Command, error) {
+			return &RunCommand{
 				Meta: meta,
 			}, nil
 		},

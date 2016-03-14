@@ -84,7 +84,7 @@ func (p *Mirror) Sync() error {
 		}
 	}
 
-	options := &sync.Options{Exclude: excludes}
+	options := &sync.Options{Exclude: excludes, Verbose: p.Verbose}
 
 	// Sync and watch all volumes
 	for _, v := range volumes {
