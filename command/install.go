@@ -2,9 +2,10 @@ package command
 
 import (
 	"flag"
-	"github.com/mefellows/parity/install"
-	"github.com/mefellows/parity/config"
 	"strings"
+
+	"github.com/mefellows/parity/config"
+	"github.com/mefellows/parity/install"
 )
 
 type InstallCommand struct {
@@ -43,5 +44,5 @@ Options:
 }
 
 func (c *InstallCommand) Synopsis() string {
-	return "Run the parity install"
+	return "Install Parity"
 }

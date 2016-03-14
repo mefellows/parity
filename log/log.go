@@ -67,9 +67,7 @@ type ParityLogger struct {
 }
 
 func init() {
-	if fl := log.Flags(); fl&log.Ltime != 0 {
-		log.SetFlags(fl | log.Lmicroseconds)
-	}
+	log.SetFlags(0) // No timestamps
 }
 
 func NewLogger() *ParityLogger {
@@ -88,6 +86,14 @@ func (m *ParityLogger) Debug(format string, v ...interface{}) {
 
 func (m *ParityLogger) Info(format string, v ...interface{}) {
 	m.Log(INFO, format, v...)
+}
+
+func (m *ParityLogger) Stage(format string, v ...interface{}) {
+	log.Printf("Stage : "+format+"\n", v...)
+}
+
+func (m *ParityLogger) Step(format string, v ...interface{}) {
+	log.Printf(" ---> "+format+"\n", v...)
 }
 
 func (m *ParityLogger) Warn(format string, v ...interface{}) {
@@ -130,7 +136,10 @@ func (m *ParityLogger) Log(l LogLevel, format string, v ...interface{}) {
 			level = "FATAL"
 			colorFormat = coloursMap[LIGHTRED]
 		}
-		log.Printf("["+level+"]\t\t"+colorFormat+format+ansi.Reset+"\n", v...)
+
+		log.Printf("      "+"["+level+"] "+colorFormat+format+ansi.Reset+"\n", v...)
+		// log.Printf(colorFormat+format+ansi.Reset+"\n", v...)
+		// log.Printf("["+level+"]\t\t"+colorFormat+format+ansi.Reset+"\n", v...)
 	}
 }
 
@@ -152,6 +161,18 @@ func Debug(format string, v ...interface{}) {
 
 func Info(format string, v ...interface{}) {
 	std.Log(INFO, format, v...)
+}
+
+func Stage(format string, v ...interface{}) {
+	std.Stage(format, v...)
+}
+
+func Step(format string, v ...interface{}) {
+	std.Step(format, v...)
+}
+
+func Banner(s string) {
+	fmt.Print(s)
 }
 
 func Warn(format string, v ...interface{}) {

@@ -2,8 +2,6 @@ package install
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 	"path/filepath"
 
 	"github.com/mefellows/parity/log"
@@ -33,40 +31,41 @@ func (s *stepAdd) Cleanup(multistep.StateBag) {
 }
 
 func InstallParity(ui cli.Ui) {
-	done := make(chan bool)
-	// Interrupt handler
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, os.Kill)
-
-	// Our "bag of state" that we read the value from
-	state := new(multistep.BasicStateBag)
-	state.Put("value", 0)
-
-	steps := []multistep.Step{
-		&stepAdd{},
-		&stepAdd{},
-		&stepAdd{},
-	}
-
-	runner := &multistep.BasicRunner{Steps: steps}
-
-	go func() {
-		// Executes the steps
-		runner.Run(state)
-		<-done
-	}()
-
-	select {
-	case <-done:
-		log.Info("Done stepping stuff")
-	case <-sigChan:
-		log.Info("Cancel signal arrived...")
-
-		// Wrap this in an interruptable mechanism
-		runner.Cancel()
-	}
-
-	log.Info("chan completed!")
+	log.Stage("Install Parity")
+	// done := make(chan bool)
+	// // Interrupt handler
+	// sigChan := make(chan os.Signal, 1)
+	// signal.Notify(sigChan, os.Interrupt, os.Kill)
+	//
+	// // Our "bag of state" that we read the value from
+	// state := new(multistep.BasicStateBag)
+	// state.Put("value", 0)
+	//
+	// steps := []multistep.Step{
+	// 	&stepAdd{},
+	// 	&stepAdd{},
+	// 	&stepAdd{},
+	// }
+	//
+	// runner := &multistep.BasicRunner{Steps: steps}
+	//
+	// go func() {
+	// 	// Executes the steps
+	// 	runner.Run(state)
+	// 	<-done
+	// }()
+	//
+	// select {
+	// case <-done:
+	// 	log.Info("Done stepping stuff")
+	// case <-sigChan:
+	// 	log.Info("Cancel signal arrived...")
+	//
+	// 	// Wrap this in an interruptable mechanism
+	// 	runner.Cancel()
+	// }
+	//
+	// log.Info("chan completed!")
 	// Check - is there a Docker Machine created?
 
 	//    -> If so, use the currently selected machine
@@ -89,7 +88,7 @@ func InstallParity(ui cli.Ui) {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Info("Installing bootlocal.sh on Docker Host")
+	log.Step("Installing bootlocal.sh on Docker Host")
 	remoteTmpFile := fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/bootlocal.sh"))
@@ -101,25 +100,25 @@ func InstallParity(ui cli.Ui) {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}
 
-	log.Info("Installing mirror-daemon.sh on Docker Host")
+	log.Step("Installing mirror-daemon.sh on Docker Host")
 	remoteTmpFile = fmt.Sprintf("/tmp/%s", filepath.Base(file.Name()))
 	err = scp.CopyPath(file.Name(), remoteTmpFile, session)
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo cp %s %s", remoteTmpFile, "/var/lib/boot2docker/mirror-daemon.sh"))
 	session.Close()
 
-	log.Info("Downloading file sync utility (mirror)")
+	log.Step("Downloading file sync utility (mirror)")
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
 
-	log.Info("Restarting Docker")
+	log.Step("Restarting Docker")
 	utils.RunCommandWithDefaults(utils.DockerHost(), "sudo shutdown -r now")
 	utils.WaitForNetwork("docker", utils.DockerHost())
 	utils.WaitForNetwork("mirror", utils.MirrorHost())
 
 	// Removing shared folders
 	if utils.CheckSharedFolders(ui) {
-		log.Info("Unmounting Virtualbox shared folders")
+		log.Step("Unmounting Virtualbox shared folders")
 		utils.UnmountSharedFolders()
 	}
 
-	log.Info("Parity installed. Run 'parity run' to to get started!")
+	log.Stage("Install Parity : Complete")
 }

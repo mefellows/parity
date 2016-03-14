@@ -10,5 +10,6 @@ type PluginConfig struct {
 
 type Plugin interface {
 	Configure(*PluginConfig)
-	Teardown()
+	Teardown() error
+	Name() string
 }

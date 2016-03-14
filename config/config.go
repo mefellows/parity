@@ -39,4 +39,5 @@ type RootConfig struct {
 	LogLevel    int                  `default:"2" required:"true" mapstructure:"loglevel"`
 	Run         []plugo.PluginConfig `mapstructure:"run"`
 	Sync        []plugo.PluginConfig `mapstructure:"sync"`
+	Shell       []plugo.PluginConfig `mapstructure:"shell"`
 }

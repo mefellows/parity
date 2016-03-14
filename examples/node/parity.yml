@@ -1,7 +1,7 @@
 name: Example Parity
-loglevel: 0
+loglevel: 2
 run:
-  - name: machine
+  - name: compose
     config:
       dest: testmachinedest
       composefile: docker-compose.yml
@@ -13,3 +13,5 @@ sync:
         - tmp
         - \.log$
         - \.git
+shell:
+  - name: compose

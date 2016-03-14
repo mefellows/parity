@@ -50,7 +50,7 @@ func (c *RunCommand) Help() string {
 	helpText := `
 Usage: parity run [options]
 
-  Runs Parity.
+  Runs Parity and your associated Docker environment.
 
 	By default, Parity will parse any local docker-compose.yml file, automatically sync the appropriate volumes
 	and run your application.
@@ -66,5 +66,5 @@ Options:
 
 // Synopsis for the command
 func (c *RunCommand) Synopsis() string {
-	return "Run Parity file watcher"
+	return "Run Parity"
 }

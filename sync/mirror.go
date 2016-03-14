@@ -21,7 +21,6 @@ import (
 )
 
 type Mirror struct {
-	// Config Config.RunConfig
 	Dest         string
 	Src          string
 	Filters      []string
@@ -36,8 +35,12 @@ func init() {
 	}, "mirror")
 }
 
+func (p *Mirror) Name() string {
+	return "mirror"
+}
+
 func (p *Mirror) Sync() error {
-	// Sync stuff
+	log.Stage("Synchronising source/dest folders")
 	pkiMgr, err := pki.New()
 	pkiMgr.Config.Insecure = true
 
@@ -85,13 +88,13 @@ func (p *Mirror) Sync() error {
 
 	// Sync and watch all volumes
 	for _, v := range volumes {
-		p.pluginConfig.Ui.Output(fmt.Sprintf("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v)))
+		log.Step("Syncing contents of '%s' -> '%s'", v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v))
 		err = sync.Sync(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
 		if err != nil {
-			p.pluginConfig.Ui.Error(fmt.Sprintf("Error during initial file sync: %v", err))
+			log.Error("Error during initial file sync: %v", err)
 		}
 
-		p.pluginConfig.Ui.Output(fmt.Sprintf("Monitoring '%s' for changes", v))
+		log.Step("Monitoring '%s' for changes", v)
 		go sync.Watch(v, fmt.Sprintf("mirror://%s%s", utils.MirrorHost(), v), options)
 	}
 
@@ -99,7 +102,7 @@ func (p *Mirror) Sync() error {
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
 	<-sigChan
-	log.Info("Interrupt received, shutting down")
+	log.Debug("Interrupt received, shutting down")
 
 	return nil
 }
@@ -109,6 +112,7 @@ func (m *Mirror) Configure(c *parity.PluginConfig) {
 	m.pluginConfig = c
 }
 
-func (m *Mirror) Teardown() {
+func (m *Mirror) Teardown() error {
 	log.Debug("Tearing down mirror sync plugin")
+	return nil
 }

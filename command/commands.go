@@ -3,8 +3,8 @@ package command
 import (
 	"os"
 
-	"github.com/mitchellh/cli"
 	"github.com/mefellows/parity/config"
+	"github.com/mitchellh/cli"
 )
 
 var Commands map[string]cli.CommandFactory
@@ -31,6 +31,11 @@ func init() {
 		},
 		"run": func() (cli.Command, error) {
 			return &RunCommand{
+				Meta: meta,
+			}, nil
+		},
+		"interactive": func() (cli.Command, error) {
+			return &InteractiveCommand{
 				Meta: meta,
 			}, nil
 		},

@@ -72,7 +72,7 @@ func dockerCertPath() string {
 }
 
 // Create a docker client from environment
-func dockerClient() *dockerclient.Client {
+func DockerClient() *dockerclient.Client {
 	client, err := dockerclient.NewClientFromEnv()
 	if err != nil {
 		log.Fatalf("Unabled to create a Docker Client: Is Docker Machine installed and running?")
@@ -204,7 +204,7 @@ WaitLoop:
 	for {
 		select {
 		case <-waitDone:
-			log.Info("Connected to", name)
+			log.Info("Connected to %s", name)
 			break WaitLoop
 		case <-time.After(timeout):
 			log.Fatalf("Unable to connect to %s %s", name, "Is Docker running?")
@@ -250,7 +250,7 @@ func CheckSharedFolders(ui cli.Ui) bool {
 }
 
 func interactiveDocker() {
-	//client := dockerClient()
+	//client := DockerClient()
 	//container, err := client.CreateContainer(createContainerOptions)
 
 }
@@ -293,4 +293,8 @@ func ReadComposeVolumes() []string {
 	}
 
 	return volumes
+}
+
+func ProjectNameSafe(name string) string {
+	return strings.Replace(strings.ToLower(name), " ", "", -1)
 }
