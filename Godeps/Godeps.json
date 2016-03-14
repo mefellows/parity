@@ -312,6 +312,11 @@
 			"Rev": "a49c8269a6899cae30da1f8a4b82e0ce945f9967"
 		},
 		{
+			"ImportPath": "github.com/imdario/mergo",
+			"Comment": "0.2.0-5-g61a5285",
+			"Rev": "61a52852277811e93e06d28e0d0c396284a7730b"
+		},
+		{
 			"ImportPath": "github.com/mefellows/mirror/filesystem",
 			"Comment": "pre-release-10-g8a7f2b3",
 			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
@@ -332,8 +337,32 @@
 			"Rev": "8a7f2b3bb250933d652609267a54ce202859e3b4"
 		},
 		{
+			"ImportPath": "github.com/mefellows/plugo/plugo",
+			"Rev": "b2aee815223a340e935d3be488295609e0bfe948"
+		},
+		{
+			"ImportPath": "github.com/mgutz/ansi",
+			"Rev": "452f5f5396543168418a299cd963697ac742b56e"
+		},
+		{
 			"ImportPath": "github.com/mitchellh/cli",
 			"Rev": "8102d0ed5ea2709ade1243798785888175f6e415"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "2caf8efc93669b6c43e0441cdc6aed17546c96f3"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/multistep",
+			"Rev": "162146fc57112954184d90266f4733e900ed05a5"
+		},
+		{
+			"ImportPath": "github.com/spf13/cast",
+			"Rev": "ee815aaf958c707ad07547cd62150d973710f747"
+		},
+		{
+			"ImportPath": "github.com/spf13/jwalterweatherman",
+			"Rev": "3d60171a64319ef63c78bd45bd60e6eab1e75f8b"
 		},
 		{
 			"ImportPath": "github.com/tmc/scp",
@@ -348,6 +377,10 @@
 			"ImportPath": "gopkg.in/fsnotify.v1",
 			"Comment": "v1.2.9",
 			"Rev": "8611c35ab31c1c28aa903d33cf8b6e44a399b09e"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40"
 		}
 	]
 }
