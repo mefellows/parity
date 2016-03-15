@@ -76,15 +76,51 @@ func (c *DockerCompose) GetProject() (p *project.Project, err error) {
 	return p, nil
 }
 
+func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
+	log.Stage("Interactive Shell")
+	log.Debug("Compose - starting docker compose services")
+
+	mergedConfig := *parity.DEFAULT_INTERACTIVE_SHELL_OPTIONS
+	mergo.MergeWithOverwrite(&mergedConfig, &config)
+
+	client := utils.DockerClient()
+	client.SkipServerVersionCheck = true
+	container := fmt.Sprintf("parity-%s_%s_1", c.pluginConfig.ProjectNameSafe, mergedConfig.Service)
+
+	opts := dockerclient.AttachToContainerOptions{
+		Stdin:        true,
+		Stdout:       true,
+		Stderr:       true,
+		InputStream:  os.Stdin,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr,
+		RawTerminal:  true,
+		Container:    container,
+		Stream:       true,
+		Logs:         true,
+	}
+
+	log.Step("Attaching to container '%s'", container)
+	if err := client.AttachToContainer(opts); err == nil {
+
+	} else {
+		return err
+	}
+
+	_, err = client.WaitContainer(container)
+
+	log.Debug("Docker Compose Run() finished")
+	return err
+}
+
 // Shell creates an interactive Docker session to the specified service
 // starting it if not currently running
 func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	log.Stage("Interactive Shell")
 	log.Debug("Compose - starting docker compose services")
 
-	defaultOptions := parity.DEFAULT_INTERACTIVE_SHELL_OPTIONS
-	mergo.Merge(&config, defaultOptions)
-	// Start / check running services
+	mergedConfig := *parity.DEFAULT_INTERACTIVE_SHELL_OPTIONS
+	mergo.MergeWithOverwrite(&mergedConfig, &config)
 	// Check if services running
 
 	// if running, attach to running container
@@ -96,15 +132,15 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 
 	client := utils.DockerClient()
 	client.SkipServerVersionCheck = true
-	container := fmt.Sprintf("parity-%s_%s_1", c.pluginConfig.ProjectNameSafe, config.Service)
+	container := fmt.Sprintf("parity-%s_%s_1", c.pluginConfig.ProjectNameSafe, mergedConfig.Service)
 
 	createExecOptions := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          true,
-		Cmd:          config.Command,
-		User:         config.User,
+		Cmd:          mergedConfig.Command,
+		User:         mergedConfig.User,
 		Container:    container,
 	}
 

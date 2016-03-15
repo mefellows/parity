@@ -261,7 +261,10 @@ func FindDockerComposeFiles() []string {
 // Read a docker-compose.yml and return a slice of
 // directories to sync into the Docker Host
 //
-// "." and "./." is converted to the current directory parity is running from
+// "." and "./." is converted to the current directory parity is running from.
+// Any volume starting with "/" will be treated as an absolute path.
+// All other volumes (e.g. starting with "./" or without a prefix "/") will be treated as
+// relative paths.
 func ReadComposeVolumes() []string {
 	volumes := make([]string, 0)
 
@@ -282,8 +285,12 @@ func ReadComposeVolumes() []string {
 			for _, c := range project.Configs {
 				for _, v := range c.Volumes {
 					v = strings.SplitN(v, ":", 2)[0]
+
 					if v == "." || v == "./." {
 						v, _ = os.Getwd()
+					} else if strings.Index(v, "/") != 0 {
+						cwd, _ := os.Getwd()
+						v = fmt.Sprintf("%s/%s", cwd, v)
 					}
 					volumes = append(volumes, v)
 				}

@@ -30,15 +30,14 @@ func (c *RunCommand) Run(args []string) int {
 	cmdFlags.BoolVar(&verbose, "verbose", true, "Enable verbose output")
 	cmdFlags.StringVar(&configFile, "config", configFile, "Enable verbose output")
 
+	if err := cmdFlags.Parse(args); err != nil {
+		return 1
+	}
+
 	if !verbose {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	// TODO: Run should do the following
-
-	// - Parse parity.yml file
-	// - Automatically sync files
-	// - Automatically run Docker/Compose
 	parity := app.New(&config.Config{Ui: c.Meta.Ui, ConfigFile: configFile})
 	parity.Run()
 

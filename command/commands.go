@@ -39,6 +39,11 @@ func init() {
 				Meta: meta,
 			}, nil
 		},
+		"attach": func() (cli.Command, error) {
+			return &AttachCommand{
+				Meta: meta,
+			}, nil
+		},
 		"run": func() (cli.Command, error) {
 			return &RunCommand{
 				Meta: meta,

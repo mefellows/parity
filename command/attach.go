@@ -10,8 +10,8 @@ import (
 	app "github.com/mefellows/parity/parity"
 )
 
-// InteractiveCommand contains parameters required to configure the Parity runtime
-type InteractiveCommand struct {
+// AttachCommand contains parameters required to configure the Parity runtime
+type AttachCommand struct {
 	Meta        config.Meta
 	Service     string
 	ComposeFile string
@@ -19,7 +19,7 @@ type InteractiveCommand struct {
 }
 
 // Run Parity
-func (c *InteractiveCommand) Run(args []string) int {
+func (c *AttachCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("sync", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
@@ -39,7 +39,7 @@ func (c *InteractiveCommand) Run(args []string) int {
 	parity.LoadPlugins()
 
 	if shell, err := parity.GetShellPlugin("compose"); err == nil {
-		shell.Shell(app.ShellConfig{
+		shell.Attach(app.ShellConfig{
 			Service: c.Service,
 		})
 	} else {
@@ -50,15 +50,15 @@ func (c *InteractiveCommand) Run(args []string) int {
 }
 
 // Help text for the command
-func (c *InteractiveCommand) Help() string {
+func (c *AttachCommand) Help() string {
 	helpText := `
-Usage: parity interactive [options]
+Usage: parity attach [options]
 
-	Shells into an interactive Docker
+	Attaches to a running Docker container as PID: 1 (access to logs, debugger etc.)
 
 Options:
 
-  --service                   The service in your compose file to shell into. Required.
+  --service                   The service in your compose file to shell into. Defaults to 'web'.
   --config                    Path to the configuration file. Defaults to parity.yml.
   --composefile               Path to the compose file. Defaults to docker-compose.yml.
 `
@@ -67,6 +67,6 @@ Options:
 }
 
 // Synopsis for the command
-func (c *InteractiveCommand) Synopsis() string {
-	return "Shell into an interactive Docker terminal"
+func (c *AttachCommand) Synopsis() string {
+	return "Attach to a running Docker process"
 }

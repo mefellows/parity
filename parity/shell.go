@@ -3,6 +3,7 @@ package parity
 type Shell interface {
 	Plugin
 	Shell(ShellConfig) error
+	Attach(ShellConfig) error
 }
 
 type ShellConfig struct {

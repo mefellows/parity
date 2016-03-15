@@ -24,17 +24,28 @@ Simplify Docker for non LXC-native environments (Windows, Mac OSX) by:
 
 Additionally, Parity will not require any other external dependencies, except the Docker ecosystem.
 
+## Project Status
+
+*Beta*: The first 2 of 4 items are working, with the following features in a beta status:
+
+* Simple _installation_ (`parity install`)
+* _Code synchronisation_ into the Docker VM, from any directory, including file pattern exclusions (`parity run`)
+* Automatically _run_ a docker compose file via Parity (`parity run`)
+* Automatically _shell_ into a running service to look around (`parity interactive`)
+* Automatically _attach_ into a running service to look around (`parity attach`)
+* Prototyped Windows - current builds don't support Windows, but it has been proven to be working (you trust me, right?)
+
 ## Getting Started
 
 [Download](releases) a Parity release and put it somewhere on your `PATH`.
 
-#### On Mac OSX using Homebrew
+### On Mac OSX using Homebrew
 
 ```bash
 brew install https://raw.githubusercontent.com/mefellows/parity/master/scripts/parity.rb
 ```
 
-#### Using Go Get
+### Using Go Get
 
 ```bash
 go get github.com/mefellows/parity
@@ -62,20 +73,23 @@ By default, Parity will exclude any files containing `git`, `tmp` or ending with
 
 See `parity run --help` for more detail.
 
-### Configuring Parity with `.parityrc` files
+### Enabling GUI
 
-If you are on a Mac and have installed the bash shims, whenever you enter a folder containing a `.parityrc` file, Parity will automatically run for you based on that configuration and begin syncing files.
-Logs will be redirected to `/tmp/parity-<project>.log` should you wish to see what's happening.
+*NOTE*: _This is a MacOSX only feature._
 
-#### File format
+You will need to install XQuartz (`brew install Caskroom/cask/xquartz` or see https://xquartz.macosforge.org/trac for details).
+
+parity x
+
+## Configuration File format
 
 TODO
 
 ## Similar Projects
 
-All of the below attempt to address the first 2 or 3 goals of this project, but not the fourth (opinionated build and local dev process) and they all bring in some other dependency.
+All of the below attempt to address the first 2 or 3 goals of this project, but not the fourth (opinionated build and local dev process). Additionally, they all bring in some other dependency and none of them work on Windows.
 
 * https://github.com/brikis98/docker-osx-dev - This is my favourite and much of this project owes to the works of it. It doesn't work on Windows, however, and has a few small pre-requisites. If you're afraid of Parity, consider this!
-* https://allysonjulian.com/setting-up-docker-with-xhyve/ and https://github.com/zchee/docker-machine-driver-xhyve - This is even more seamless, using a native containerisation system for MacOSX called [xhyve](https://github.com/mist64/xhyve) and an experimental Docker driver. Again, this doesn't work on Windows but is very good.
+* https://allysonjulian.com/setting-up-docker-with-xhyve/ and https://github.com/zchee/docker-machine-driver-xhyve - This is even more seamless, using a native containerisation system for MacOSX called [xhyve](https://github.com/mist64/xhyve) and an experimental Docker driver. Again, this doesn't work on Windows but is very good. One downside is that it needs to allocate the entire drive space, unlike typical vdockerirtualisation applications that will have a dynamically resizable volume.
 * https://github.com/nlf/dlite - This aims to solve the top 3 goals of the project. I was never quite able to get this working, but it is quite an interesting project.
 * See https://github.com/brikis98/docker-osx-dev#alternatives for others.
