@@ -55,6 +55,19 @@ go get github.com/mefellows/parity
 
 Simply run `parity install` and follow the prompts.
 
+### Creating default host entry
+
+To create a default host entry for http://parity.local (e.g. `/etc/hosts`) you can run the Parity installer with the `--dns` flag enabled:
+
+On MacOSX:
+```
+sudo -E parity install --dns true
+```
+
+On Windows, run from an elevated PowerShell prompt.
+
+Note: You will need elevated privileges to perform this function.
+
 ## Running
 
 A typical invocation would look something like this:
@@ -72,6 +85,7 @@ By default, Parity will exclude any files containing `git`, `tmp` or ending with
 * `--verbose` - Enable verbose logging.
 
 See `parity run --help` for more detail.
+
 
 ### Enabling GUI
 

@@ -18,7 +18,6 @@ import (
 	"github.com/docker/libcompose/project"
 	// "github.com/docker/machine/libmachine"
 	dockerclient "github.com/fsouza/go-dockerclient"
-	"github.com/mitchellh/cli"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -239,10 +238,10 @@ func UnmountSharedFolders() {
 }
 
 // Return true if shared folders exist and the user agrees to removing them
-func CheckSharedFolders(ui cli.Ui) bool {
+func CheckSharedFolders() bool {
 	shares := FindSharedFolders()
 	if len(shares) > 0 {
-		ui.Warn("For Parity to operate properly, Virtualbox shares must be removed. Parity will automatically do this for you")
+		log.Warn("For Parity to operate properly, Virtualbox shares must be removed. Parity will automatically do this for you")
 		return true
 	}
 	return false

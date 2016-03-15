@@ -10,6 +10,7 @@ import (
 
 type InstallCommand struct {
 	Meta config.Meta
+	Dns  bool
 	Port int // Which port to listen on
 }
 
@@ -17,14 +18,14 @@ func (c *InstallCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("install", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
-	cmdFlags.IntVar(&c.Port, "port", 8123, "The http port to listen on")
+	cmdFlags.BoolVar(&c.Dns, "dns", false, "Create a host entry to your Docker environment at 'parity.local'")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
 	c.Meta.Ui.Output("Installing Parity")
-	install.InstallParity(c.Meta.Ui)
+	install.InstallParity(install.InstallConfig{Dns: c.Dns})
 
 	return 0
 }
@@ -37,7 +38,7 @@ Usage: parity install [options]
 
 Options:
 
-  --port                      The http(s) port to listen on
+  --dns                      Create a host entry to your Docker environment at 'parity.local'
 `
 
 	return strings.TrimSpace(helpText)

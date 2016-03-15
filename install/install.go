@@ -3,11 +3,12 @@ package install
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
+	"github.com/lextoumbourou/goodhosts"
 	"github.com/mefellows/parity/log"
 	"github.com/mefellows/parity/utils"
 	"github.com/mefellows/parity/version"
-	"github.com/mitchellh/cli"
 	"github.com/mitchellh/multistep"
 	"github.com/tmc/scp"
 )
@@ -30,7 +31,11 @@ func (s *stepAdd) Cleanup(multistep.StateBag) {
 	log.Info("Cleaning up some step...")
 }
 
-func InstallParity(ui cli.Ui) {
+type InstallConfig struct {
+	Dns bool
+}
+
+func InstallParity(config InstallConfig) {
 	log.Stage("Install Parity")
 	// done := make(chan bool)
 	// // Interrupt handler
@@ -66,6 +71,23 @@ func InstallParity(ui cli.Ui) {
 	// }
 	//
 	// log.Info("chan completed!")
+
+	// Create DNS entry
+	if config.Dns {
+		hostname := strings.Split(utils.DockerHost(), ":")[0]
+		log.Step("Creating host entry: %s -> %s", hostname, "parity.local")
+		var hosts goodhosts.Hosts
+		var err error
+		if hosts, err = goodhosts.NewHosts(); err == nil {
+			hosts.Add(hostname, "parity.local")
+		} else {
+			log.Error("Unable to create DNS Entry: %s", err.Error())
+		}
+		if err = hosts.Flush(); err != nil {
+			log.Error("Unable to create DNS Entry: %s", err.Error())
+		}
+	}
+
 	// Check - is there a Docker Machine created?
 
 	//    -> If so, use the currently selected machine
@@ -115,7 +137,7 @@ func InstallParity(ui cli.Ui) {
 	utils.WaitForNetwork("mirror", utils.MirrorHost())
 
 	// Removing shared folders
-	if utils.CheckSharedFolders(ui) {
+	if utils.CheckSharedFolders() {
 		log.Step("Unmounting Virtualbox shared folders")
 		utils.UnmountSharedFolders()
 	}

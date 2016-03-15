@@ -54,7 +54,7 @@ func (p *Mirror) Sync() error {
 	}
 
 	// Removing shared folders
-	if utils.CheckSharedFolders(p.pluginConfig.Ui) {
+	if utils.CheckSharedFolders() {
 		utils.UnmountSharedFolders()
 	}
 
