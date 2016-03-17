@@ -48,8 +48,6 @@ RUN echo 'deb http://httpredir.debian.org/debian testing main' >> /etc/apt/sourc
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm -rf /src/*.deb
 
-#COPY local.conf /etc/fonts/local.conf
-
 # Google Chrome hack. See https://github.com/travis-ci/travis-ci/issues/938#issuecomment-77785455
 RUN chmod 1777 /dev/shm
 
