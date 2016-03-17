@@ -2,6 +2,8 @@ package run
 
 import (
 	"fmt"
+	"io"
+	"net"
 	"os"
 
 	"github.com/docker/libcompose/docker"
@@ -33,6 +35,47 @@ func (c *DockerCompose) Name() string {
 	return "compose"
 }
 
+func createXServerProxy() {
+	log.Stage("Creating X Server Proxy")
+
+	l, err := net.Listen("tcp", ":6000")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer l.Close()
+
+	// Send all traffic back to unix socket
+	addr, err := net.ResolveUnixAddr("unix", os.Getenv("DISPLAY"))
+	if err != nil {
+		log.Error("Error: ", err.Error())
+	}
+
+	for {
+		xServerClient, err := net.DialUnix("unix", nil, addr)
+		if err != nil {
+			log.Error("Error: ", err.Error())
+		}
+		defer xServerClient.Close()
+
+		conn, err := l.Accept()
+		log.Debug("X Service Proxy listening on: %s (remote: %s)", conn.LocalAddr(), conn.RemoteAddr())
+		if err != nil {
+			log.Fatal(err)
+		}
+		go func(c net.Conn, s *net.UnixConn) {
+			buf := make([]byte, 8092)
+			io.CopyBuffer(s, c, buf)
+			s.CloseWrite()
+		}(conn, xServerClient)
+
+		go func(c net.Conn, s *net.UnixConn) {
+			buf := make([]byte, 8092)
+			io.CopyBuffer(c, s, buf)
+			c.Close()
+		}(conn, xServerClient)
+	}
+}
+
 // Run the Docker Compose Run Plugin
 //
 // Detects docker-compose.yml files, builds and runs.
@@ -42,6 +85,8 @@ func (c *DockerCompose) Run() (err error) {
 
 	if c.project, err = c.GetProject(); err == nil {
 		log.Debug("Compose - starting docker compose services")
+
+		go createXServerProxy()
 
 		c.project.Delete()
 		c.project.Build()
@@ -66,8 +111,6 @@ func (c *DockerCompose) GetProject() (p *project.Project, err error) {
 			log.Error("Could not create Compose project %s", err.Error())
 			return p, err
 		}
-
-		log.Debug("Compose - running docker up")
 	} else {
 		log.Error("Could not parse compose file: %s", err.Error())
 		return p, err
@@ -127,6 +170,8 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	// if NOT running, start services and attach
 	if c.project, err = c.GetProject(); err == nil {
 		log.Step("Starting compose services")
+
+		// Do I cal this? Restarts the services. Maybe check to see if they're up?
 		c.project.Up()
 	}
 

@@ -17,6 +17,7 @@ import (
 type RunCommand struct {
 	Meta    config.Meta
 	Verbose bool
+	X       bool
 }
 
 // Run Parity
@@ -28,6 +29,7 @@ func (c *RunCommand) Run(args []string) int {
 	dir, _ := os.Getwd()
 	var configFile = fmt.Sprintf("%s/parity.yml", dir)
 	cmdFlags.BoolVar(&verbose, "verbose", true, "Enable verbose output")
+	cmdFlags.BoolVar(&c.X, "x", false, "Enable X redirection (Mac OSX Only)")
 	cmdFlags.StringVar(&configFile, "config", configFile, "Enable verbose output")
 
 	if err := cmdFlags.Parse(args); err != nil {
