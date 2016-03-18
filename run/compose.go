@@ -101,7 +101,6 @@ func (c *DockerCompose) Run() (err error) {
 			"DISPLAY=192.168.99.1:0",
 		}
 
-		// tmpConfig.Environment = project.
 		for _, conf := range c.project.Configs {
 			existing := conf.Environment.Slice()
 			env = append(env, existing...)
@@ -109,11 +108,6 @@ func (c *DockerCompose) Run() (err error) {
 		}
 		c.project.Delete()
 		c.project.Build()
-
-		for _, conf := range c.project.Configs {
-			log.Info("Environment slice: %v", conf)
-		}
-
 		c.project.Up()
 	}
 
