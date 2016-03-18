@@ -42,7 +42,7 @@ Additionally, Parity will not require any other external dependencies, except th
 ### On Mac OSX using Homebrew
 
 ```bash
-brew install https://raw.githubusercontent.com/mefellows/parity/master/scripts/parity.rb
+brew install https://raw.githubusercontent.com/mefellows/parity/spike/scripts/parity.rb
 ```
 
 ### Using Go Get
