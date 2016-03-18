@@ -2,7 +2,7 @@
 name: testx11
 
 # Log Level (0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error, 5 = Fatal)
-loglevel: 0
+loglevel: 2
 
 ##
 ## Plugin configuration

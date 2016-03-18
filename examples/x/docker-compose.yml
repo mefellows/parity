@@ -1,12 +1,10 @@
 web:
   build: .
-  environment:
-  - DISPLAY=192.168.99.1:0
   tty: true
   stdin: true
   net: host
   volumes:
-  - v /tmp/.googledata:/data
+  - /tmp/.googledata:/data
   entrypoint: google-chrome
   cmd:
   - --user-data-dir=/data

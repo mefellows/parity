@@ -105,7 +105,7 @@ func InstallParity(config InstallConfig) {
 
 	// Create the install mirror daemon template
 	file := utils.CreateTemplateTempFile(templatesBootlocalShBytes, 0655, templateData)
-	session, err := utils.SshSession(utils.DockerHost())
+	session, err := utils.SSHSession(utils.DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}
@@ -117,7 +117,7 @@ func InstallParity(config InstallConfig) {
 	session.Close()
 
 	file = utils.CreateTemplateTempFile(templatesMirrorDaemonShBytes, 0655, templateData)
-	session, err = utils.SshSession(utils.DockerHost())
+	session, err = utils.SSHSession(utils.DockerHost())
 	if err != nil {
 		log.Fatalf("Unable to connect to Docker utils.DockerHost(). Is Docker running? (%v)", err.Error())
 	}

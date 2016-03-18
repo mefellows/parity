@@ -14,6 +14,7 @@ import (
 type XCommand struct {
 	Meta       config.Meta
 	ParityFile string
+	Port       int
 }
 
 // Run Parity
@@ -24,12 +25,13 @@ func (c *XCommand) Run(args []string) int {
 	dir, _ := os.Getwd()
 	var parityFile = fmt.Sprintf("%s/parity.yml", dir)
 	cmdFlags.StringVar(&c.ParityFile, "config", parityFile, "Parity configuration file")
+	cmdFlags.IntVar(&c.Port, "port", 6000, "Proxy port")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
-	run.XServerProxy()
+	run.XServerProxy(c.Port)
 
 	return 0
 }
@@ -39,11 +41,11 @@ func (c *XCommand) Help() string {
 	helpText := `
 Usage: parity x [options]
 
-	Creates a X Quartz window proxy
+	Creates a X Quartz window proxy for any docker container.
 
 Options:
 
-  --config                    Path to the configuration file. Defaults to parity.yml.
+  --port		The X Server Proxy listener port. Defaults to 6000 (XQuartz default).
 `
 
 	return strings.TrimSpace(helpText)

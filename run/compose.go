@@ -21,6 +21,7 @@ import (
 // to run a local development environment
 type DockerCompose struct {
 	ComposeFile  string `default:"docker-compose.yml" required:"true" mapstructure:"composefile"`
+	XProxyPort   int    `default:"6000" required:"true" mapstructure:"x_proxy_port"`
 	pluginConfig *parity.PluginConfig
 	project      *project.Project
 }
@@ -40,13 +41,13 @@ func (c *DockerCompose) Name() string {
 // socket that XQuartz is listening on.
 //
 // NOTE: this function does not start/install the XQuartz service
-func XServerProxy() {
+func XServerProxy(port int) {
 	if runtime.GOOS != "darwin" {
 		log.Debug("Not running an OSX environment, skip run X Server Proxy")
 		return
 	}
 
-	l, err := net.Listen("tcp", ":6000")
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,8 +58,11 @@ func XServerProxy() {
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	}
+	log.Info("X Service Proxy available on all network interfaces on port %d", port)
+	if host, err := utils.DockerVMHost(); err == nil {
+		log.Info("Parity has detected your Docker environment and recommends running 'export DISPLAY=%s:0' in your container to forward the X display", host)
+	}
 
-	// Proxy loop
 	for {
 		xServerClient, err := net.DialUnix("unix", nil, addr)
 		if err != nil {
@@ -67,7 +71,7 @@ func XServerProxy() {
 		defer xServerClient.Close()
 
 		conn, err := l.Accept()
-		log.Debug("X Service Proxy listening on: %s (remote: %s)", conn.LocalAddr(), conn.RemoteAddr())
+		log.Debug("X Service Proxy connected to client on: %s (remote: %s)", conn.LocalAddr(), conn.RemoteAddr())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -85,6 +89,27 @@ func XServerProxy() {
 	}
 }
 
+func injectDisplayEnvironmentVariables(p *project.Project) {
+	if host, err := utils.DockerVMHost(); err == nil {
+		injectEnvironmentVariable([]string{fmt.Sprintf("DISPLAY=%s:0", host)}, p)
+	}
+}
+
+func injectEnvironmentVariable(envVars []string, p *project.Project) {
+	for _, conf := range p.Configs {
+		existing := conf.Environment.Slice()
+		envVars = append(envVars, existing...)
+		conf.Environment = project.NewMaporEqualSlice(envVars)
+	}
+}
+
+// runXServerProxy runs the X Server, including setting any Environment
+// variables (e.g. DISPLAY)
+func (c *DockerCompose) runXServerProxy() {
+	XServerProxy(c.XProxyPort)
+	injectDisplayEnvironmentVariables(c.project)
+}
+
 // Run the Docker Compose Run Plugin
 //
 // Detects docker-compose.yml files, builds and runs.
@@ -95,17 +120,8 @@ func (c *DockerCompose) Run() (err error) {
 	if c.project, err = c.GetProject(); err == nil {
 		log.Debug("Compose - starting docker compose services")
 
-		go XServerProxy()
+		go c.runXServerProxy()
 
-		env := []string{
-			"DISPLAY=192.168.99.1:0",
-		}
-
-		for _, conf := range c.project.Configs {
-			existing := conf.Environment.Slice()
-			env = append(env, existing...)
-			conf.Environment = project.NewMaporEqualSlice(env)
-		}
 		c.project.Delete()
 		c.project.Build()
 		c.project.Up()
@@ -193,16 +209,7 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	if c.project, err = c.GetProject(); err == nil {
 		log.Step("Starting compose services")
 
-		env := []string{
-			"DISPLAY=192.168.99.1:0",
-		}
-
-		// tmpConfig.Environment = project.
-		for _, conf := range c.project.Configs {
-			existing := conf.Environment.Slice()
-			env = append(env, existing...)
-			conf.Environment = project.NewMaporEqualSlice(env)
-		}
+		injectDisplayEnvironmentVariables(c.project)
 
 		// Do I cal this? Restarts the services. Maybe check to see if they're up?
 		c.project.Up()

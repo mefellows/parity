@@ -93,7 +93,17 @@ See `parity run --help` for more detail.
 
 You will need to install XQuartz (`brew install Caskroom/cask/xquartz` or see https://xquartz.macosforge.org/trac for details).
 
-parity x
+First, ensure your X Server is running:
+
+```
+open -a XQuartz
+```
+
+From within a Parity project, you can simply run `parity run` and an proxy between Docker and your X Server will automatically be setup for you,
+including the `$DISPLAY` environment variables in your Docker containers.
+
+If you just want to setup a proxy for another non-Parity managed project, you can run `parity x`. This will setup create the Proxy as per above, but
+you'll need to manually setup the `$DISPLAY variable`. Parity will log to console the environment variable setup. It will look something like `export DISPLAY=192.168.99.1:0`.
 
 ## Configuration File format
 

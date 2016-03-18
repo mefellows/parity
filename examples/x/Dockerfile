@@ -51,4 +51,10 @@ RUN echo 'deb http://httpredir.debian.org/debian testing main' >> /etc/apt/sourc
 # Google Chrome hack. See https://github.com/travis-ci/travis-ci/issues/938#issuecomment-77785455
 RUN chmod 1777 /dev/shm
 
+# Running:
+#
+# tab 1: parity run
+# tab 2: parity interactive
+# 				google-chrome --no-sandbox --user-data-dir=/tmp
+
 CMD ["bash"]

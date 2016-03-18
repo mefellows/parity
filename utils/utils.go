@@ -23,9 +23,8 @@ import (
 
 const bootlocalTemplateFile = "templates/bootlocal.sh"
 const daemonTemplateFile = "templates/mirror-daemon.sh"
-const TMP_FILE = "/tmp/bootlocal.sh"
 
-// Resurrect a go-bindata asset and execute the template (if any) it contains.
+// CreateTemplateTempFile resurrects a go-bindata asset and execute the template (if any) it contains.
 // return a reference to the temporary file
 func CreateTemplateTempFile(data func() ([]byte, error), perms os.FileMode, templateData interface{}) *os.File {
 	daemon, err := data()
@@ -70,7 +69,33 @@ func dockerCertPath() string {
 	return fmt.Sprintf("%s/id_rsa", os.Getenv("DOCKER_CERT_PATH"))
 }
 
-// Create a docker client from environment
+// FindNetwork will return the IP and Network interface
+// given an IP address.
+func FindNetwork(ip string) (net.IP, net.Addr, error) {
+	addr := net.ParseIP(ip)
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, nil, fmt.Errorf("Unable to lookup local network (%s)", err.Error())
+	}
+
+	for _, i := range ifaces {
+		if addrs, err := i.Addrs(); err == nil {
+			for _, a := range addrs {
+				switch a.(type) {
+				case *net.IPNet:
+					ip, network, _ := net.ParseCIDR(a.String())
+					if network.Contains(addr) {
+						return ip, network, nil
+					}
+				}
+			}
+		}
+	}
+	return nil, nil, fmt.Errorf("Unable to find network for ip %s", ip)
+}
+
+// DockerClient creates a docker client from environment
 func DockerClient() *dockerclient.Client {
 	client, err := dockerclient.NewClientFromEnv()
 	if err != nil {
@@ -79,29 +104,38 @@ func DockerClient() *dockerclient.Client {
 	return client
 }
 
-// Docker Host port
+// dockerPort returns the SSH port for Docker
 func dockerPort() string {
 	return "22"
 }
 
-// Mirror Daemon port
+// mirrorPort returns the Mirror daemon port
 func mirrorPort() string {
 	return "8123"
 }
 
-// Get the IP address of the current active Docker Machine
+// DockerHost gets the ip:port of the current active Docker Machine
 func DockerHost() string {
 	return fmt.Sprintf("%s:%s", dockerHost(), dockerPort())
 }
 
-// Get the IP address of the current active Docker Machine
+// DockerVMHost gets the IP address of the underlying VM for the current active Docker Machine
+func DockerVMHost() (string, error) {
+	ip, _, err := FindNetwork(dockerHost())
+	if err == nil {
+		return ip.String(), nil
+	}
+	return "", err
+}
+
+// MirrorHost gets the ip:port of the current active Docker Machine
 func MirrorHost() string {
 	return fmt.Sprintf("%s:%s", dockerHost(), mirrorPort())
 }
 
-// Create an SSH Session for a remote Docker host
-func SshSession(host string) (session *ssh.Session, err error) {
-	config := SshConfig()
+// SSHSession creates an SSH Session for a remote Docker host
+func SSHSession(host string) (session *ssh.Session, err error) {
+	config := SSHConfig()
 	connection, err := ssh.Dial("tcp", host, config)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to dial: %s", err)
@@ -113,21 +147,21 @@ func SshSession(host string) (session *ssh.Session, err error) {
 	return session, nil
 }
 
-// Run a command on a host using the default configuration for I/O redirection
+// RunCommandWithDefaults runs a command on a host using the default configuration for I/O redirection
 func RunCommandWithDefaults(host string, command string) error {
 	return RunCommand(host, command, os.Stdin, os.Stdout, os.Stderr)
 }
 
-// Run a command on a given SSH Connection and return the output of Stdout
+// RunCommandAndReturn runs a command on a given SSH Connection and return the output of Stdout
 func RunCommandAndReturn(host string, command string) (string, error) {
 	var output bytes.Buffer
 	RunCommand(host, command, os.Stdin, &output, os.Stderr)
 	return output.String(), nil
 }
 
-// Run command on a given SSH connection
+// RunCommand runs command on a given SSH connection
 func RunCommand(host string, command string, reader io.Reader, stdOut io.Writer, stdErr io.Writer) error {
-	session, err := SshSession(host)
+	session, err := SSHSession(host)
 	if err != nil {
 		return err
 	}
@@ -152,8 +186,8 @@ func RunCommand(host string, command string, reader io.Reader, stdOut io.Writer,
 	return nil
 }
 
-// Get an SSH configuration to the Docker Host
-func SshConfig() *ssh.ClientConfig {
+// SSHConfig gets an SSH configuration to the Docker Host
+func SSHConfig() *ssh.ClientConfig {
 	return &ssh.ClientConfig{
 		User: dockerUser(),
 		Auth: []ssh.AuthMethod{
@@ -162,7 +196,7 @@ func SshConfig() *ssh.ClientConfig {
 	}
 }
 
-// Read a public key and
+// PublicKeyFile reads a public key and returns an SSH auth method
 func PublicKeyFile(file string) ssh.AuthMethod {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -176,12 +210,12 @@ func PublicKeyFile(file string) ssh.AuthMethod {
 	return ssh.PublicKeys(key)
 }
 
-// Wait for a network connection to become available within a timeout
+// WaitForNetwork waits for a network connection to become available within a timeout
 func WaitForNetwork(name string, host string) {
 	WaitForNetworkWithTimeout(name, host, 60*time.Second)
 }
 
-// Wait for a network connection to become available within a timeout
+// WaitForNetworkWithTimeout waits for a network connection to become available within a timeout
 func WaitForNetworkWithTimeout(name string, host string, timeout time.Duration) {
 	waitDone := make(chan bool, 1)
 	go func() {
@@ -213,13 +247,13 @@ WaitLoop:
 	return
 }
 
-// Get the list of shared folders on the remote Docker Host
+// FindSharedFolders gets the list of shared folders on the remote Docker Host
 func FindSharedFolders() []string {
 	sharesRes, err := RunCommandAndReturn(DockerHost(), "mount | grep 'type vboxsf' | awk '{print $3}'")
 	if err != nil {
 		log.Warn("Unable to determine Virtualbox shared folders, please manually ensure shared folders are removed to ensure proper operation of Parity")
 	}
-	shares := make([]string, 0)
+	var shares []string
 	for _, s := range strings.Split(sharesRes, "\n") {
 		if s != "" {
 			shares = append(shares, s)
@@ -228,7 +262,7 @@ func FindSharedFolders() []string {
 	return shares
 }
 
-// Unmount all shared folders on the remote Docker host
+// UnmountSharedFolders unmounts all shared folders on the remote Docker host
 func UnmountSharedFolders() {
 	shares := FindSharedFolders()
 	for _, s := range shares {
@@ -237,7 +271,7 @@ func UnmountSharedFolders() {
 	}
 }
 
-// Return true if shared folders exist and the user agrees to removing them
+// CheckSharedFolders seturn true if shared folders exist and the user agrees to removing them
 func CheckSharedFolders() bool {
 	shares := FindSharedFolders()
 	if len(shares) > 0 {
@@ -247,17 +281,13 @@ func CheckSharedFolders() bool {
 	return false
 }
 
-func interactiveDocker() {
-	//client := DockerClient()
-	//container, err := client.CreateContainer(createContainerOptions)
-
-}
-
+// FindDockerComposeFiles returns the list of Docker Compose files
+// in the current project. Currently just defaults to a single ['docker-compose.yml']
 func FindDockerComposeFiles() []string {
 	return []string{"docker-compose.yml"}
 }
 
-// Read a docker-compose.yml and return a slice of
+// ReadComposeVolumes reads a docker-compose.yml and return a slice of
 // directories to sync into the Docker Host
 //
 // "." and "./." is converted to the current directory parity is running from.
@@ -265,7 +295,7 @@ func FindDockerComposeFiles() []string {
 // All other volumes (e.g. starting with "./" or without a prefix "/") will be treated as
 // relative paths.
 func ReadComposeVolumes() []string {
-	volumes := make([]string, 0)
+	var volumes []string
 
 	files := FindDockerComposeFiles()
 	for i, file := range files {
@@ -273,7 +303,7 @@ func ReadComposeVolumes() []string {
 			project, err := docker.NewProject(&docker.Context{
 				Context: project.Context{
 					ComposeFiles: []string{file},
-					ProjectName:  fmt.Sprintf("parity-", i),
+					ProjectName:  fmt.Sprintf("parity-%d", i),
 				},
 			})
 
@@ -300,6 +330,7 @@ func ReadComposeVolumes() []string {
 	return volumes
 }
 
+// ProjectNameSafe creates a Docker Compose compatible (safe) name given a string
 func ProjectNameSafe(name string) string {
 	return strings.Replace(strings.ToLower(name), " ", "", -1)
 }
