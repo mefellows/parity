@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"runtime"
 
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
@@ -35,8 +36,15 @@ func (c *DockerCompose) Name() string {
 	return "compose"
 }
 
-func createXServerProxy() {
-	log.Stage("Creating X Server Proxy")
+// XServerProxy creates a TCP proxy on port 6000 to a the Unix
+// socket that XQuartz is listening on.
+//
+// NOTE: this function does not start/install the XQuartz service
+func XServerProxy() {
+	if runtime.GOOS != "darwin" {
+		log.Debug("Not running an OSX environment, skip run X Server Proxy")
+		return
+	}
 
 	l, err := net.Listen("tcp", ":6000")
 	if err != nil {
@@ -44,12 +52,13 @@ func createXServerProxy() {
 	}
 	defer l.Close()
 
-	// Send all traffic back to unix socket
+	// Send all traffic back to unix $DISPLAY socket on a running XQuartz server
 	addr, err := net.ResolveUnixAddr("unix", os.Getenv("DISPLAY"))
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	}
 
+	// Proxy loop
 	for {
 		xServerClient, err := net.DialUnix("unix", nil, addr)
 		if err != nil {
@@ -86,10 +95,25 @@ func (c *DockerCompose) Run() (err error) {
 	if c.project, err = c.GetProject(); err == nil {
 		log.Debug("Compose - starting docker compose services")
 
-		go createXServerProxy()
+		go XServerProxy()
 
+		env := []string{
+			"DISPLAY=192.168.99.1:0",
+		}
+
+		// tmpConfig.Environment = project.
+		for _, conf := range c.project.Configs {
+			existing := conf.Environment.Slice()
+			env = append(env, existing...)
+			conf.Environment = project.NewMaporEqualSlice(env)
+		}
 		c.project.Delete()
 		c.project.Build()
+
+		for _, conf := range c.project.Configs {
+			log.Info("Environment slice: %v", conf)
+		}
+
 		c.project.Up()
 	}
 
@@ -145,7 +169,7 @@ func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
 
 	log.Step("Attaching to container '%s'", container)
 	if err := client.AttachToContainer(opts); err == nil {
-
+		c.project.Up(config.Service)
 	} else {
 		return err
 	}
@@ -154,6 +178,10 @@ func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
 
 	log.Debug("Docker Compose Run() finished")
 	return err
+}
+
+func (c *DockerCompose) mergeEnvironmentArrays(new, existing []string) *project.MaporEqualSlice {
+	return nil
 }
 
 // Shell creates an interactive Docker session to the specified service
@@ -170,6 +198,17 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	// if NOT running, start services and attach
 	if c.project, err = c.GetProject(); err == nil {
 		log.Step("Starting compose services")
+
+		env := []string{
+			"DISPLAY=192.168.99.1:0",
+		}
+
+		// tmpConfig.Environment = project.
+		for _, conf := range c.project.Configs {
+			existing := conf.Environment.Slice()
+			env = append(env, existing...)
+			conf.Environment = project.NewMaporEqualSlice(env)
+		}
 
 		// Do I cal this? Restarts the services. Maybe check to see if they're up?
 		c.project.Up()

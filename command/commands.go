@@ -29,6 +29,11 @@ func init() {
 				Meta: meta,
 			}, nil
 		},
+		"x": func() (cli.Command, error) {
+			return &XCommand{
+				Meta: meta,
+			}, nil
+		},
 		"install": func() (cli.Command, error) {
 			return &InstallCommand{
 				Meta: meta,

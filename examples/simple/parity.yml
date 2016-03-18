@@ -1,7 +1,7 @@
 name: Example Parity
 loglevel: 0
 run:
-  - name: machine
+  - name: compose 
     config:
       dest: testmachinedest
 sync:
