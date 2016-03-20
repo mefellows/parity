@@ -14,7 +14,7 @@ import (
 	// auto-export these plugins?
 	_ "github.com/mefellows/mirror/filesystem/fs"
 	_ "github.com/mefellows/mirror/filesystem/remote"
-
+	mutils "github.com/mefellows/mirror/filesystem/utils"
 	pki "github.com/mefellows/mirror/pki"
 	sync "github.com/mefellows/mirror/sync"
 	"github.com/mefellows/parity/utils"
@@ -70,7 +70,7 @@ func (p *Mirror) Sync() error {
 	// Add PWD if nothing in compose
 	dir, _ := os.Getwd()
 	if len(volumes) == 0 {
-		volumes = append(volumes, dir)
+		volumes = append(volumes, mutils.LinuxPath(dir))
 	}
 
 	pki.MirrorConfig.ClientTlsConfig = Config

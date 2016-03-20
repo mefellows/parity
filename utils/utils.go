@@ -12,10 +12,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mefellows/parity/log"
-
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
+	mutils "github.com/mefellows/mirror/filesystem/utils"
+	"github.com/mefellows/parity/log"
 	// "github.com/docker/machine/libmachine"
 	dockerclient "github.com/fsouza/go-dockerclient"
 	"golang.org/x/crypto/ssh"
@@ -47,6 +47,9 @@ func CreateTemplateTempFile(data func() ([]byte, error), perms os.FileMode, temp
 
 	return file
 }
+
+// TODO: Don't rely on environment variables. If they are set, great, otherwise default
+// to
 
 // Get the hostname (sans protocol/port) of the current Docker Host
 func dockerHost() string {
@@ -212,7 +215,7 @@ func PublicKeyFile(file string) ssh.AuthMethod {
 
 // WaitForNetwork waits for a network connection to become available within a timeout
 func WaitForNetwork(name string, host string) {
-	WaitForNetworkWithTimeout(name, host, 60*time.Second)
+	WaitForNetworkWithTimeout(name, host, 120*time.Second)
 }
 
 // WaitForNetworkWithTimeout waits for a network connection to become available within a timeout
@@ -321,7 +324,7 @@ func ReadComposeVolumes() []string {
 						cwd, _ := os.Getwd()
 						v = fmt.Sprintf("%s/%s", cwd, v)
 					}
-					volumes = append(volumes, v)
+					volumes = append(volumes, mutils.LinuxPath(v))
 				}
 			}
 		}

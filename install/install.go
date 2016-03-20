@@ -129,6 +129,7 @@ func InstallParity(config InstallConfig) {
 	session.Close()
 
 	log.Step("Downloading file sync utility (mirror)")
+	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo chmod +x /var/lib/boot2docker/*.sh"))
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
 
 	log.Step("Restarting Docker")

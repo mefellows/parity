@@ -2,7 +2,9 @@ package command
 
 import (
 	"os"
+	"runtime"
 
+	"github.com/going/toolkit/log"
 	"github.com/mefellows/parity/config"
 	"github.com/mitchellh/cli"
 )
@@ -12,11 +14,16 @@ var Ui cli.Ui
 
 func init() {
 
-	Ui = &cli.ColoredUi{
-		Ui:          &cli.BasicUi{Writer: os.Stdout, Reader: os.Stdin, ErrorWriter: os.Stderr},
-		OutputColor: cli.UiColorYellow,
-		InfoColor:   cli.UiColorNone,
-		ErrorColor:  cli.UiColorRed,
+	if runtime.GOOS == "darwin" {
+		Ui = &cli.ColoredUi{
+			Ui:          &cli.BasicUi{Writer: os.Stdout, Reader: os.Stdin, ErrorWriter: os.Stderr},
+			OutputColor: cli.UiColorYellow,
+			InfoColor:   cli.UiColorNone,
+			ErrorColor:  cli.UiColorRed,
+		}
+	} else {
+		log.Debug("Not running an OSX environment, removing colour from output")
+		Ui = &cli.BasicUi{Writer: os.Stdout, Reader: os.Stdin, ErrorWriter: os.Stderr}
 	}
 
 	meta := config.Meta{
