@@ -34,7 +34,6 @@ echo "==> Go version ${VERSION}"
 
 echo "==> Getting dependencies..."
 export GO15VENDOREXPERIMENT=1
-go get -d -v -p 2 ./...
 
 echo "==> Removing old directory..."
 rm -f bin/*
