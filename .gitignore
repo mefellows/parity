@@ -24,4 +24,4 @@ _testmain.go
 *.prof
 *.cov
 bin
-pkg
+./pkg
