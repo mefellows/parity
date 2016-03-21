@@ -4,10 +4,10 @@ Docker on OSX and Windows, as it was meant to be.
 
 Docker is awesome, but it suffers from a few annoying drawbacks:
 
-* Users on Mac OSX or Windows need to go by an intermediary - a virtual machine. This means code synchronisation is a pain, and constant rebuilds are necessary.
-* Only certain directories are automatically shared into the vm (e.g. `/Users` on OSX)
-* Docker Machine requires you to manage multiple machines, but generally you only ever deal with one of them. But I still have to configure with env vars or an annoying `eval`.
-* It is too flexible, resulting in many different ways to achieve 'normal' things. Most people just want to build their app without having to worry about orchestrating containers.
+# Users on Mac OSX or Windows need to go by an intermediary - a virtual machine. This means code synchronisation is a pain, and constant rebuilds are necessary.
+# Only certain directories are automatically shared into the vm (e.g. `/Users` on OSX)
+# Docker Machine requires you to manage multiple machines, but generally you only ever deal with one of them. But I still have to configure with env vars or an annoying `eval`.
+# It is too flexible, resulting in many different ways to achieve 'normal' things. Most people just want to build their app without having to worry about orchestrating containers.
 
 [![wercker status](https://app.wercker.com/status/be9372da6e34efdf671fb7ebdea591ec/s "wercker status")](https://app.wercker.com/project/bykey/be9372da6e34efdf671fb7ebdea591ec)
 [![Coverage Status](https://coveralls.io/repos/github/mefellows/parity/badge.svg?branch=master)](https://coveralls.io/github/mefellows/parity?branch=master)
@@ -36,7 +36,7 @@ Additionally, Parity will not require any other external dependencies, except th
 * Automatically _run_ a docker compose file via Parity (`parity run`)
 * Automatically _shell_ into a running service to look around (`parity interactive`)
 * Automatically _attach_ into a running service to look around (`parity attach`)
-* Prototyped Windows - current builds don't support Windows, but it has been proven to be working (you trust me, right?)
+* Windows support - see the [Windows node example](examples/node-windows). Currently, you need to provide full context paths. We plan on submitting patches to [libcompose](https://github.com/docker/libcompose) to move this into upstream and make it simpler.
 
 ## Getting Started
 

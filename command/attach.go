@@ -35,6 +35,7 @@ func (c *AttachCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.Meta.Ui.Output("Attaching to running container")
 	parity := app.New(&config.Config{ConfigFile: parityFile})
 	parity.LoadPlugins()
 

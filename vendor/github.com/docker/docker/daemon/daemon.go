@@ -70,9 +70,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/libnetwork"
 	nwconfig "github.com/docker/libnetwork/config"
-	lntypes "github.com/docker/libnetwork/types"
 	"github.com/docker/libtrust"
-	"github.com/opencontainers/runc/libcontainer"
 	"golang.org/x/net/context"
 )
 
@@ -999,14 +997,14 @@ func isBrokenPipe(e error) bool {
 
 // PullImage initiates a pull operation. image is the repository name to pull, and
 // tag may be either empty, or indicate a specific tag to pull.
-func (daemon *Daemon) PullImage(ref reference.Named, metaHeaders map[string][]string, authConfig *types.AuthConfig, outStream io.Writer) error {
+func (daemon *Daemon) PullImage(ctx context.Context, ref reference.Named, metaHeaders map[string][]string, authConfig *types.AuthConfig, outStream io.Writer) error {
 	// Include a buffer so that slow client connections don't affect
 	// transfer performance.
 	progressChan := make(chan progress.Progress, 100)
 
 	writesDone := make(chan struct{})
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(ctx)
 
 	go func() {
 		writeDistributionProgress(cancelFunc, outStream, progressChan)
@@ -1054,7 +1052,7 @@ func (daemon *Daemon) PullOnBuild(name string, authConfigs map[string]types.Auth
 		pullRegistryAuth = &resolvedConfig
 	}
 
-	if err := daemon.PullImage(ref, nil, pullRegistryAuth, output); err != nil {
+	if err := daemon.PullImage(context.Background(), ref, nil, pullRegistryAuth, output); err != nil {
 		return nil, err
 	}
 	return daemon.GetImage(name)
@@ -1505,7 +1503,7 @@ func configureVolumes(config *Config, rootUID, rootGID int) (*store.VolumeStore,
 
 // AuthenticateToRegistry checks the validity of credentials in authConfig
 func (daemon *Daemon) AuthenticateToRegistry(authConfig *types.AuthConfig) (string, string, error) {
-	return daemon.RegistryService.Auth(authConfig, dockerversion.DockerUserAgent())
+	return daemon.RegistryService.Auth(authConfig, dockerversion.DockerUserAgent(""))
 }
 
 // SearchRegistryForImages queries the registry for images matching
@@ -1513,7 +1511,7 @@ func (daemon *Daemon) AuthenticateToRegistry(authConfig *types.AuthConfig) (stri
 func (daemon *Daemon) SearchRegistryForImages(term string,
 	authConfig *types.AuthConfig,
 	headers map[string][]string) (*registrytypes.SearchResults, error) {
-	return daemon.RegistryService.Search(term, authConfig, dockerversion.DockerUserAgent(), headers)
+	return daemon.RegistryService.Search(term, authConfig, dockerversion.DockerUserAgent(""), headers)
 }
 
 // IsShuttingDown tells whether the daemon is shutting down or not
@@ -1528,50 +1526,40 @@ func (daemon *Daemon) GetContainerStats(container *container.Container) (*types.
 		return nil, err
 	}
 
-	// Retrieve the nw statistics from libnetwork and inject them in the Stats
-	var nwStats []*libcontainer.NetworkInterface
-	if nwStats, err = daemon.getNetworkStats(container); err != nil {
+	if stats.Networks, err = daemon.getNetworkStats(container); err != nil {
 		return nil, err
-	}
-
-	stats.Networks = make(map[string]types.NetworkStats)
-	for _, iface := range nwStats {
-		// For API Version >= 1.21, the original data of network will
-		// be returned.
-		stats.Networks[iface.Name] = types.NetworkStats{
-			RxBytes:   iface.RxBytes,
-			RxPackets: iface.RxPackets,
-			RxErrors:  iface.RxErrors,
-			RxDropped: iface.RxDropped,
-			TxBytes:   iface.TxBytes,
-			TxPackets: iface.TxPackets,
-			TxErrors:  iface.TxErrors,
-			TxDropped: iface.TxDropped,
-		}
 	}
 
 	return stats, nil
 }
 
-func (daemon *Daemon) getNetworkStats(c *container.Container) ([]*libcontainer.NetworkInterface, error) {
-	var list []*libcontainer.NetworkInterface
-
+func (daemon *Daemon) getNetworkStats(c *container.Container) (map[string]types.NetworkStats, error) {
 	sb, err := daemon.netController.SandboxByID(c.NetworkSettings.SandboxID)
 	if err != nil {
-		return list, err
+		return nil, err
 	}
 
-	stats, err := sb.Statistics()
+	lnstats, err := sb.Statistics()
 	if err != nil {
-		return list, err
+		return nil, err
 	}
 
-	// Convert libnetwork nw stats into libcontainer nw stats
-	for ifName, ifStats := range stats {
-		list = append(list, convertLnNetworkStats(ifName, ifStats))
+	stats := make(map[string]types.NetworkStats)
+	// Convert libnetwork nw stats into engine-api stats
+	for ifName, ifStats := range lnstats {
+		stats[ifName] = types.NetworkStats{
+			RxBytes:   ifStats.RxBytes,
+			RxPackets: ifStats.RxPackets,
+			RxErrors:  ifStats.RxErrors,
+			RxDropped: ifStats.RxDropped,
+			TxBytes:   ifStats.TxBytes,
+			TxPackets: ifStats.TxPackets,
+			TxErrors:  ifStats.TxErrors,
+			TxDropped: ifStats.TxDropped,
+		}
 	}
 
-	return list, nil
+	return stats, nil
 }
 
 // newBaseContainer creates a new container with its initial
@@ -1673,19 +1661,6 @@ func (daemon *Daemon) reloadClusterDiscovery(config *Config) error {
 	}
 
 	return nil
-}
-
-func convertLnNetworkStats(name string, stats *lntypes.InterfaceStatistics) *libcontainer.NetworkInterface {
-	n := &libcontainer.NetworkInterface{Name: name}
-	n.RxBytes = stats.RxBytes
-	n.RxPackets = stats.RxPackets
-	n.RxErrors = stats.RxErrors
-	n.RxDropped = stats.RxDropped
-	n.TxBytes = stats.TxBytes
-	n.TxPackets = stats.TxPackets
-	n.TxErrors = stats.TxErrors
-	n.TxDropped = stats.TxDropped
-	return n
 }
 
 func validateID(id string) error {

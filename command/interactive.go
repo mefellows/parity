@@ -35,6 +35,7 @@ func (c *InteractiveCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.Meta.Ui.Output("Starting interactive session")
 	parity := app.New(&config.Config{ConfigFile: parityFile})
 	parity.LoadPlugins()
 

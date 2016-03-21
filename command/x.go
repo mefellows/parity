@@ -31,6 +31,7 @@ func (c *XCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.Meta.Ui.Output("Starting X Proxy")
 	run.XServerProxy(c.Port)
 
 	return 0
