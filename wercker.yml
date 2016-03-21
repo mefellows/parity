@@ -2,17 +2,13 @@ box: tcnksm/gox:1.5.3
 build:
     steps:
         - setup-go-workspace
-        # - script:
-        #     name: go get
-        #     code: |
-        #         go get -d -v -p 2 ./...
-        # - script:
-        #     name: go test
-        #     code: |
-        #         make test
-        # - script:
-        #     name: Publish Coveralls
-        #     code: goveralls -service="wercker.com" -coverprofile=profile.cov -repotoken $COVERALLS_TOKEN
+        - script:
+            name: go test
+            code: |
+                make test
+        - script:
+            name: Publish Coveralls
+            code: goveralls -service="wercker.com" -coverprofile=profile.cov -repotoken $COVERALLS_TOKEN
         - script:
             name: gox build
             code: |
