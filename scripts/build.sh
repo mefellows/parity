@@ -47,7 +47,7 @@ gox \
     -arch="${XC_ARCH}" \
     -ldflags "-X main.GitCommit ${GIT_COMMIT}${GIT_DIRTY}" \
     -output "pkg/{{.OS}}_{{.Arch}}/{{.Dir}}" \
-    ./...
+    .
 set -e
 
 # Move all the compiled things to the $GOPATH/bin
