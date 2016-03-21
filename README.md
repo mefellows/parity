@@ -12,6 +12,9 @@ Docker is awesome, but it suffers from a few annoying drawbacks:
 [![wercker status](https://app.wercker.com/status/be9372da6e34efdf671fb7ebdea591ec/s "wercker status")](https://app.wercker.com/project/bykey/be9372da6e34efdf671fb7ebdea591ec)
 [![Coverage Status](https://coveralls.io/repos/github/mefellows/parity/badge.svg?branch=master)](https://coveralls.io/github/mefellows/parity?branch=master)
 
+Watch Parity in Action:
+[![asciicast](https://asciinema.org/a/1ewj8cep4kcxrwj61vh5xzwm7.png)](https://asciinema.org/a/1ewj8cep4kcxrwj61vh5xzwm7)
+
 ## Goals
 
 Simplify Docker for non LXC-native environments (Windows, Mac OSX) by:

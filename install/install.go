@@ -32,11 +32,16 @@ func (s *stepAdd) Cleanup(multistep.StateBag) {
 }
 
 type InstallConfig struct {
-	Dns bool
+	Dns     bool
+	DevHost string
 }
 
 func InstallParity(config InstallConfig) {
 	log.Stage("Install Parity")
+
+	if config.DevHost == "" {
+		config.DevHost = "parity.local"
+	}
 	// done := make(chan bool)
 	// // Interrupt handler
 	// sigChan := make(chan os.Signal, 1)
@@ -75,11 +80,11 @@ func InstallParity(config InstallConfig) {
 	// Create DNS entry
 	if config.Dns {
 		hostname := strings.Split(utils.DockerHost(), ":")[0]
-		log.Step("Creating host entry: %s -> %s", hostname, "parity.local")
+		log.Step("Creating host entry: %s -> %s", hostname, config.DevHost)
 		var hosts goodhosts.Hosts
 		var err error
 		if hosts, err = goodhosts.NewHosts(); err == nil {
-			hosts.Add(hostname, "parity.local")
+			hosts.Add(hostname, config.DevHost)
 		} else {
 			log.Error("Unable to create DNS Entry: %s", err.Error())
 		}
@@ -130,6 +135,7 @@ func InstallParity(config InstallConfig) {
 
 	log.Step("Downloading file sync utility (mirror)")
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo chmod +x /var/lib/boot2docker/*.sh"))
+	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf(" /var/lib/boot2docker/*.sh"))
 	utils.RunCommandWithDefaults(utils.DockerHost(), fmt.Sprintf("sudo /var/lib/boot2docker/bootlocal.sh start"))
 
 	log.Step("Restarting Docker")

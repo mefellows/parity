@@ -123,10 +123,10 @@ func (c *DockerCompose) Run() (err error) {
 		go c.runXServerProxy()
 
 		// Do I cal this? Restarts the services. Maybe check to see if they're up?
-		for _, conf := range c.project.Configs {
-			fmt.Println(fmt.Sprintf("Config: %v", conf))
-			fmt.Println(fmt.Sprintf("Volumes: %v", conf.Volumes))
-		}
+		// for _, conf := range c.project.Configs {
+		// 	fmt.Println(fmt.Sprintf("Config: %v", conf))
+		// 	fmt.Println(fmt.Sprintf("Volumes: %v", conf.Volumes))
+		// }
 		c.project.Delete()
 		c.project.Build()
 		c.project.Up()
@@ -139,7 +139,6 @@ func (c *DockerCompose) Run() (err error) {
 // GetProject returns the Docker project from the configuration
 func (c *DockerCompose) GetProject() (p *project.Project, err error) {
 	if _, err = os.Stat(c.ComposeFile); err == nil {
-		log.Info("Reading docker compose file: ", c.ComposeFile)
 		p, err = docker.NewProject(&docker.Context{
 			Context: project.Context{
 				ComposeFiles: []string{c.ComposeFile},
