@@ -1,0 +1,11 @@
+context:
+  build: c:\test
+
+web:
+  build: c:\test
+  ports:
+  - 3000:3000
+  expose:
+  - 3000
+  volumes:
+  - ./.:/usr/src/app
