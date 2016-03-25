@@ -1,0 +1,29 @@
+# Project Name
+name: {{.Name}}
+
+# Log Level (0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error, 5 = Fatal)
+loglevel: 2
+
+##
+## Plugin configuration
+##
+
+# Configures the Docker Compose environment
+run:
+  - name: compose
+    config:
+      composefile: docker-compose.yml
+
+# Configures the synchronisation Plugin, using Mirror () by default
+sync:
+  - name: mirror
+    config:
+      verbose: false
+      exclude:
+        - tmp
+        - \.log$
+        - \.git
+
+# This Plugin allows us to shell into an Interactive terminal
+shell:
+  - name: compose

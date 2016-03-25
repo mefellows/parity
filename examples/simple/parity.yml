@@ -1,0 +1,14 @@
+name: Example Parity
+loglevel: 0
+run:
+  - name: compose 
+    config:
+      dest: testmachinedest
+sync:
+  - name: mirror
+    config:
+      verbose: false
+      exclude:
+        - tmp
+        - \.log$
+        - \.git

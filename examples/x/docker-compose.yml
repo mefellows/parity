@@ -1,0 +1,11 @@
+web:
+  build: .
+  tty: true
+  stdin: true
+  net: host
+  volumes:
+  - /tmp/.googledata:/data
+  entrypoint: google-chrome
+  cmd:
+  - --user-data-dir=/data
+  - --no-sandbox
