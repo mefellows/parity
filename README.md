@@ -29,7 +29,7 @@ Additionally, Parity will not require any other external dependencies, except th
 
 ## Project Status
 
-*NOTE*: This project will probably (and hopefully!) be at worst partially superceded by https://blog.docker.com/2016/03/docker-for-mac-windows-beta/ when it itself is out of beta. It will eventually replace items 1-3, leaving Parity to deal with the opinionated setup problem.
+This project will probably (and hopefully!) be at worst partially superceded by [Docker](https://blog.docker.com/2016/03/docker-for-mac-windows-beta/) when it itself is out of beta. It will eventually replace items 1-3, leaving Parity to deal with the opinionated setup problem.
 
 *Beta*: The first 2 of 4 items are working, with the following features in a beta status:
 
