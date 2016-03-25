@@ -6,7 +6,7 @@ Docker is awesome, but it suffers from a few annoying drawbacks:
 
 1. Users on Mac OSX or Windows need to go by an intermediary - a virtual machine. This means code synchronisation is a pain, and constant rebuilds are necessary.
 1. Only certain directories are automatically shared into the vm (e.g. `/Users` on OSX)
-1. Docker Machine requires you to manage multiple machines, but generally you only ever deal with one of them. But I still have to configure with env vars or an annoying `eval`.
+1. Docker Machine requires you to manage multiple machines, but generally you only ever deal with one of them. But we still have to configure with env vars or an annoying `eval`.
 1. It is too flexible, resulting in many different ways to achieve 'normal' things. Most people just want to build their app without having to worry about orchestrating containers.
 
 [![wercker status](https://app.wercker.com/status/be9372da6e34efdf671fb7ebdea591ec/s "wercker status")](https://app.wercker.com/project/bykey/be9372da6e34efdf671fb7ebdea591ec)
@@ -28,6 +28,8 @@ Simplify Docker for non LXC-native environments (Windows, Mac OSX) by:
 Additionally, Parity will not require any other external dependencies, except the Docker ecosystem.
 
 ## Project Status
+
+*NOTE*: This project will probably (and hopefully!) be at worst partially superceded by https://blog.docker.com/2016/03/docker-for-mac-windows-beta/ when it itself is out of beta. It will eventually replace items 1-3, leaving Parity to deal with the opinionated setup problem.
 
 *Beta*: The first 2 of 4 items are working, with the following features in a beta status:
 
