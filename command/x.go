@@ -2,12 +2,11 @@ package command
 
 import (
 	"flag"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/mefellows/parity/config"
 	"github.com/mefellows/parity/run"
+	"github.com/mefellows/parity/utils"
 )
 
 // XCommand contains parameters required to configure the X Server Proxy
@@ -22,9 +21,7 @@ func (c *XCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("x", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
-	dir, _ := os.Getwd()
-	var parityFile = fmt.Sprintf("%s/parity.yml", dir)
-	cmdFlags.StringVar(&c.ParityFile, "config", parityFile, "Parity configuration file")
+	cmdFlags.StringVar(&c.ParityFile, "config", utils.DefaultParityConfigurationFile(), "Parity configuration file")
 	cmdFlags.IntVar(&c.Port, "port", 6000, "Proxy port")
 
 	if err := cmdFlags.Parse(args); err != nil {

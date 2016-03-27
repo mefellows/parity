@@ -12,22 +12,20 @@ import (
 	"github.com/mefellows/parity/utils"
 )
 
-// RunCommand contains parameters required to configure the Parity runtime
-type RunCommand struct {
+// BuildCommand contains parameters required to configure the Parity runtime
+type BuildCommand struct {
 	Meta       config.Meta
-	Verbose    bool
 	ConfigFile string
-	X          bool
+	Verbose    bool
 }
 
 // Run Parity
-func (c *RunCommand) Run(args []string) int {
+func (c *BuildCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("sync", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
 	cmdFlags.BoolVar(&c.Verbose, "verbose", true, "Enable verbose output")
-	cmdFlags.BoolVar(&c.X, "x", false, "Enable X redirection (Mac OSX Only)")
-	cmdFlags.StringVar(&c.ConfigFile, "config", utils.DefaultParityConfigurationFile(), "Enable verbose output")
+	cmdFlags.StringVar(&c.ConfigFile, "config", utils.DefaultParityConfigurationFile(), "Specifies the Parity configuration file path")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
@@ -44,14 +42,11 @@ func (c *RunCommand) Run(args []string) int {
 }
 
 // Help text for the command
-func (c *RunCommand) Help() string {
+func (c *BuildCommand) Help() string {
 	helpText := `
-Usage: parity run [options]
+Usage: parity build [options]
 
-  Runs Parity and your associated Docker environment.
-
-	By default, Parity will parse any local docker-compose.yml file, automatically sync the appropriate volumes
-	and run your application.
+  Builds and publishes your applications' Docker containers to a registry.
 
 Options:
 
@@ -63,6 +58,6 @@ Options:
 }
 
 // Synopsis for the command
-func (c *RunCommand) Synopsis() string {
-	return "Run Parity"
+func (c *BuildCommand) Synopsis() string {
+	return "Build and publish your applications' Docker images."
 }

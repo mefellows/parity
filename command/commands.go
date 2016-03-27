@@ -31,6 +31,11 @@ func init() {
 	}
 
 	Commands = map[string]cli.CommandFactory{
+		"cleanup": func() (cli.Command, error) {
+			return &CleanupCommand{
+				Meta: meta,
+			}, nil
+		},
 		"init": func() (cli.Command, error) {
 			return &InitCommand{
 				Meta: meta,
@@ -58,6 +63,11 @@ func init() {
 		},
 		"run": func() (cli.Command, error) {
 			return &RunCommand{
+				Meta: meta,
+			}, nil
+		},
+		"setup": func() (cli.Command, error) {
+			return &SetupCommand{
 				Meta: meta,
 			}, nil
 		},

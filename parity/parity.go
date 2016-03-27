@@ -149,7 +149,6 @@ func (p *Parity) Run() {
 
 	select {
 	case e := <-p.errorChan:
-		log.Debug("Received error:")
 		log.Error(e.Error())
 	case <-sigChan:
 		log.Debug("Received interrupt, shutting down.")

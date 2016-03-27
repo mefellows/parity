@@ -117,16 +117,11 @@ func (c *DockerCompose) Run() (err error) {
 	log.Stage("Run Docker")
 	log.Step("Building compose project")
 
-	if c.project, err = c.GetProject(); err == nil {
+	if c.project != nil {
 		log.Debug("Compose - starting docker compose services")
 
 		go c.runXServerProxy()
 
-		// Do I cal this? Restarts the services. Maybe check to see if they're up?
-		// for _, conf := range c.project.Configs {
-		// 	fmt.Println(fmt.Sprintf("Config: %v", conf))
-		// 	fmt.Println(fmt.Sprintf("Volumes: %v", conf.Volumes))
-		// }
 		c.project.Delete()
 		c.project.Build()
 		c.project.Up()
@@ -158,6 +153,7 @@ func (c *DockerCompose) GetProject() (p *project.Project, err error) {
 	return p, nil
 }
 
+// Attach attaches to the specified service in the running container
 func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
 	log.Stage("Interactive Shell")
 	log.Debug("Compose - starting docker compose services")
@@ -182,14 +178,23 @@ func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
 		Logs:         true,
 	}
 
+	if c.project.Configs[config.Service] == nil {
+		return fmt.Errorf("Service %s does not exist", config.Service)
+	}
+
 	log.Step("Attaching to container '%s'", container)
 	if err := client.AttachToContainer(opts); err == nil {
-		c.project.Up(config.Service)
+		err = c.project.Up(config.Service)
+		if err != nil {
+			log.Error("error: %s", err.Error())
+			return err
+		}
 	} else {
 		return err
 	}
 
 	_, err = client.WaitContainer(container)
+	log.Error("wc error: %s", err.Error())
 
 	log.Debug("Docker Compose Run() finished")
 	return err
@@ -209,9 +214,9 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	mergo.MergeWithOverwrite(&mergedConfig, &config)
 	// Check if services running
 
-	// if running, attach to running container
+	// TODO: if running, attach to running container
 	// if NOT running, start services and attach
-	if c.project, err = c.GetProject(); err == nil {
+	if c.project != nil {
 		log.Step("Starting compose services")
 
 		injectDisplayEnvironmentVariables(c.project)
@@ -252,12 +257,27 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 	return err
 }
 
-func (c *DockerCompose) Configure(pc *parity.PluginConfig) {
-	log.Debug("Configuring 'Docker Machine' 'Run' plugin")
-
-	c.pluginConfig = pc
+// Build will build all images in the Parity setup
+func (c *DockerCompose) Build(parity.BuilderConfig) error {
+	return nil
 }
 
+// Publish pushes all images to the registries
+func (c *DockerCompose) Publish(parity.BuilderConfig) error {
+	return nil
+}
+
+// Configure sets up this plugin with initial state
+func (c *DockerCompose) Configure(pc *parity.PluginConfig) {
+	log.Debug("Configuring 'Docker Machine' 'Run' plugin")
+	c.pluginConfig = pc
+	var err error
+	if c.project, err = c.GetProject(); err != nil {
+		log.Fatalf("Unable to create Compose Project: %s", err.Error())
+	}
+}
+
+// Teardown stops any running projects before Parity exits
 func (c *DockerCompose) Teardown() error {
 	log.Debug("Tearing down 'Docker Machine' 'Run' plugin")
 
