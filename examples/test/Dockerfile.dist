@@ -1,9 +1,0 @@
-FROM my-project2:1.0.0
-
-#
-# Application/Distribution Docker Image
-#
-# Inherits from the Base Docker image, adding the latest source code into the working directory.
-# As a general rule, you should not need to do/add anything to this image.
-
-COPY . /usr/src/app
