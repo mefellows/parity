@@ -180,7 +180,7 @@ Templates exist for the following language/frameworks:
 
 ### Creating your own Templates
 
-Parity Templates follow a specific pattern and must be internet accessible. The easiest way to go is creating a public GitHub repository, with the following layout:
+Parity Templates must adhere to a specific pattern and must be internet accessible. The easiest way to go is creating a public GitHub repository, with the following layout:
 
 ```
 ├── .parity                  Contains template configuration files (e.g. DB init scripts etc.)
@@ -190,9 +190,23 @@ Parity Templates follow a specific pattern and must be internet accessible. The 
 ├── Dockerfile.dist          The Production Docker Image. Inherits from Base.
 ├── docker-compose.yml       Production Docker Compose setup.
 ├── docker-compose.yml.dev   Local development Docker Compose setup.
-└── parity.yml               Pre-configured parity.yml file for the Template.
+├── parity.yml               Pre-configured parity.yml file for the Template.
+└── index.txt                A file containing a manifest of all files required in the template.
 ```
 
+Additional files may be included, provided that are noted in the Parity Template manifest `/index.txt`. By convention these files should lie in the `./.parity` folder.
+
+*Template expansion variables*
+
+Within the Template files, you can use the following variables using the usual golang
+[text/template expansion](https://golang.org/pkg/text/template/) rules e.g. `{{.Base}}:{{.Version}}`:
+
+|  Variable  |       Description       |  Default         |    Example        |  Required  |
+|------------|:------------------------|:-----------------|:------------------|:-----------|
+| Base       | The Base docker image   | n/a              | awesome-proj      | yes        |
+| Ci         | CI container image      | `{{.Base}}-ci`   | awesome-proj-ci   | no         |
+| Dist       | Prod container image    | `{{.Base}}-dist` | awesome-proj-dist | no         |
+| Version    | Application version     | n/a              | 1.0.0             | yes        |
 
 
 ## Similar Projects

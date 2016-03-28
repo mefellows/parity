@@ -14,24 +14,31 @@ import (
 	"github.com/mefellows/parity/log"
 )
 
+// SetupConfig is the text/template structure used to expand out
+// template values in the Parity Template file
 type SetupConfig struct {
-	ImageName         string
-	Base              string
-	CiImageName       string
-	Ci                string
-	Version           string
-	Overwrite         bool
-	TemplateSourceUrl string
-	TemplateIndex     string
+	ImageName          string
+	Base               string
+	Ci                 string
+	Dist               string
+	Version            string
+	Overwrite          bool
+	TemplateSourceName string
+	TemplateSourceURL  string
+	templateIndex      string
 }
 
-var defaultParityTemplate = []string{
-	"Dockerfile",
-	"Dockerfile.ci",
-	"Dockerfile.dist",
-	"docker-compose.yml",
-	"docker-compose.yml.dev",
-	"parity.yml",
+var defaultTemplates = map[string]bool{
+	"node":  true,
+	"rails": true,
+}
+var defaultTemplateUrlTemplate = "https://github.com/mefellows/parity-%s/raw/master"
+
+func getDefaultTemplateUrl(templateName string) (string, error) {
+	if defaultTemplates[templateName] {
+		return fmt.Sprintf(defaultTemplateUrlTemplate, templateName), nil
+	}
+	return "", fmt.Errorf("Default template '%s' not found", templateName)
 }
 
 func tempFile(reader io.Reader, templateData interface{}) (*os.File, error) {
@@ -52,19 +59,59 @@ func tempFile(reader io.Reader, templateData interface{}) (*os.File, error) {
 	return file, nil
 }
 
-func SetupParityProject(config SetupConfig) error {
+// expandAndValidateConfig takes the initial SetupConfig and expands the other variables
+// sets defaults etc.
+func expandAndValidateConfig(config *SetupConfig) error {
+	if config.Base == "" {
+		return fmt.Errorf("Missing required 'Base' configuration item to the Parity Template")
+	}
+	if config.Version == "" {
+		log.Warn("Missing required 'Version' configuration item to the Parity Template. Defaults to 'latest'")
+		config.Version = "latest"
+	}
+	if config.TemplateSourceName == "" && config.TemplateSourceURL == "" {
+		return fmt.Errorf("Must provide one of 'TemplateSourceName' or 'TemplateSourceURL' to the Parity Template")
+	}
+	if config.TemplateSourceName != "" && config.TemplateSourceURL != "" {
+		return fmt.Errorf("Must provide only one of 'TemplateSourceName' or 'TemplateSourceURL' to the Parity Template")
+	}
+	if config.TemplateSourceURL != "" {
+		config.templateIndex = fmt.Sprintf("%s/index.txt", config.TemplateSourceURL)
+	}
+	if config.TemplateSourceName != "" {
+		url, err := getDefaultTemplateUrl(config.TemplateSourceName)
+		if err == nil {
+			config.TemplateSourceURL = url
+			config.templateIndex = fmt.Sprintf("%s/index.txt", url)
+		} else {
+			return err
+		}
+	}
+	if config.Ci == "" {
+		config.Ci = fmt.Sprintf("%s-ci", config.Base)
+	}
+	if config.Dist == "" {
+		config.Dist = fmt.Sprintf("%s-dist", config.Base)
+	}
+	return nil
+}
+
+func SetupParityProject(config *SetupConfig) error {
 	log.Stage("Setup Parity Project")
 
 	// 1. Merge SetupConfig with Defaults -> need to create Base, Ci and Production image names
 	dir, _ := os.Getwd()
-	parityTemplate := defaultParityTemplate
+	if err := expandAndValidateConfig(config); err != nil {
+		return err
+	}
+
+	var parityTemplate []string
 
 	// Scan template index file
-	if config.TemplateIndex != "" {
-		parityTemplate = make([]string, 0)
-		log.Step("Downloading template index: %s", config.TemplateIndex)
+	if config.templateIndex != "" {
+		log.Step("Downloading template index: %s", config.templateIndex)
 
-		resp, err := http.Get(config.TemplateIndex)
+		resp, err := http.Get(config.templateIndex)
 		if err != nil {
 			return err
 		}
@@ -104,7 +151,7 @@ func SetupParityProject(config SetupConfig) error {
 				// 2. Download resources
 				// 2a. TODO: Check/store local cache?
 				// 2b. Pull from remote
-				url := fmt.Sprintf(`%s/%s`, config.TemplateSourceUrl, f)
+				url := fmt.Sprintf(`%s/%s`, config.TemplateSourceURL, f)
 				log.Step("Downloading template file: %s", url)
 
 				resp, err := http.Get(url)

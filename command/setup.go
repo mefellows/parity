@@ -10,35 +10,41 @@ import (
 )
 
 type SetupCommand struct {
-	Meta             config.Meta
-	Template         string
-	TemplateLocation string
-	Hostname         string
-	ConfigFile       string
+	Meta              config.Meta
+	Base              string
+	Version           string
+	Template          string
+	TemplateSourceUrl string
+	ConfigFile        string
+	Overwrite         bool
 }
 
 func (c *SetupCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("install", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
-	cmdFlags.StringVar(&c.Hostname, "template", "", "Specify a pre-built template to use")
-	cmdFlags.StringVar(&c.Hostname, "templateLocation", "", "Specify a URL pointing to a Parity template")
+	cmdFlags.StringVar(&c.Base, "base", "", "Base image name e.g. 'my-awesome-project'")
+	cmdFlags.StringVar(&c.Version, "version", "1.0.0", "Initial Docker image version")
+	cmdFlags.StringVar(&c.Template, "template", "", "Specify a pre-built template to use")
+	cmdFlags.StringVar(&c.TemplateSourceUrl, "templateSourceUrl", "", "Specify a URL pointing to a Parity template")
 	cmdFlags.StringVar(&c.ConfigFile, "config", utils.DefaultParityConfigurationFile(), "Enable verbose output")
+	cmdFlags.BoolVar(&c.Overwrite, "force", false, "Overwrites any existing Parity files")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
 	c.Meta.Ui.Output("Setting up a new Parity project")
-	setup.SetupParityProject(setup.SetupConfig{
-		ImageName:         "test",
-		Ci:                "test-ci",
-		Base:              "base",
-		Version:           "1.0.0",
-		Overwrite:         true,
-		TemplateIndex:     "https://raw.githubusercontent.com/mefellows/parity-rails/master/index.txt",
-		TemplateSourceUrl: "https://raw.githubusercontent.com/mefellows/parity-rails/master",
-	})
+	if err := setup.SetupParityProject(&setup.SetupConfig{
+		TemplateSourceURL:  c.TemplateSourceUrl,
+		TemplateSourceName: c.Template,
+		Version:            c.Version,
+		Overwrite:          c.Overwrite,
+		Base:               c.Base,
+	}); err != nil {
+		c.Meta.Ui.Error(err.Error())
+		return 1
+	}
 
 	return 0
 }
@@ -47,13 +53,16 @@ func (c *SetupCommand) Help() string {
 	helpText := `
 Usage: parity setup [options]
 
-  Install Parity as a local daemon and into the running Docker Machine
+  Setup a new Parity project in the current working directory.
 
 Options:
 
-	--template                 Specify a template name e.g. rails
-	--templateLocation         Specify a template location (e.g. https://github.com/mefellows/parity) to use as a starting point.
-  --hostname                 Specify the host entry for ''--dns'.
+  --template                 Specify a template name e.g. "rails", "node".
+  --templateSourceUrl        Specify a template location (e.g. https://github.com/mefellows/parity) to use as a starting point.
+  --base                     Base docker image name e.g. my-awesome-project.
+  --version                  Docker container version.
+  --force                Overwrite any existing files when expanding the template.
+  --config                   Path to the configuration file. Defaults to parity.yml.
 `
 
 	return strings.TrimSpace(helpText)
