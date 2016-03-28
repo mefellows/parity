@@ -14,7 +14,7 @@ type SetupCommand struct {
 	Base              string
 	Version           string
 	Template          string
-	TemplateSourceUrl string
+	TemplateSourceURL string
 	ConfigFile        string
 	Overwrite         bool
 }
@@ -26,7 +26,7 @@ func (c *SetupCommand) Run(args []string) int {
 	cmdFlags.StringVar(&c.Base, "base", "", "Base image name e.g. 'my-awesome-project'")
 	cmdFlags.StringVar(&c.Version, "version", "1.0.0", "Initial Docker image version")
 	cmdFlags.StringVar(&c.Template, "template", "", "Specify a pre-built template to use")
-	cmdFlags.StringVar(&c.TemplateSourceUrl, "templateSourceUrl", "", "Specify a URL pointing to a Parity template")
+	cmdFlags.StringVar(&c.TemplateSourceURL, "templateSourceUrl", "", "Specify a URL pointing to a Parity template")
 	cmdFlags.StringVar(&c.ConfigFile, "config", utils.DefaultParityConfigurationFile(), "Enable verbose output")
 	cmdFlags.BoolVar(&c.Overwrite, "force", false, "Overwrites any existing Parity files")
 
@@ -36,7 +36,7 @@ func (c *SetupCommand) Run(args []string) int {
 
 	c.Meta.Ui.Output("Setting up a new Parity project")
 	if err := setup.SetupParityProject(&setup.SetupConfig{
-		TemplateSourceURL:  c.TemplateSourceUrl,
+		TemplateSourceURL:  c.TemplateSourceURL,
 		TemplateSourceName: c.Template,
 		Version:            c.Version,
 		Overwrite:          c.Overwrite,
@@ -61,7 +61,7 @@ Options:
   --templateSourceUrl        Specify a template location (e.g. https://github.com/mefellows/parity) to use as a starting point.
   --base                     Base docker image name e.g. my-awesome-project.
   --version                  Docker container version.
-  --force                Overwrite any existing files when expanding the template.
+  --force                    Overwrite any existing files when expanding the template.
   --config                   Path to the configuration file. Defaults to parity.yml.
 `
 
