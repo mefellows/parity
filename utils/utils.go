@@ -115,6 +115,7 @@ func DockerClient() *dockerclient.Client {
 	if err != nil {
 		log.Fatalf("Unabled to create a Docker Client: Is Docker Machine installed and running?")
 	}
+	client.SkipServerVersionCheck = true
 	return client
 }
 

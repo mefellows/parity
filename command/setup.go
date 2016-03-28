@@ -35,7 +35,7 @@ func (c *SetupCommand) Run(args []string) int {
 	}
 
 	c.Meta.Ui.Output("Setting up a new Parity project")
-	if err := setup.SetupParityProject(&setup.SetupConfig{
+	if err := setup.SetupParityProject(&setup.Config{
 		TemplateSourceURL:  c.TemplateSourceURL,
 		TemplateSourceName: c.Template,
 		Version:            c.Version,

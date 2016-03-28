@@ -1,10 +1,14 @@
 package run
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
+	"regexp"
 	"runtime"
 
 	"github.com/docker/libcompose/docker"
@@ -162,7 +166,6 @@ func (c *DockerCompose) Attach(config parity.ShellConfig) (err error) {
 	mergo.MergeWithOverwrite(&mergedConfig, &config)
 
 	client := utils.DockerClient()
-	client.SkipServerVersionCheck = true
 	container := fmt.Sprintf("parity-%s_%s_1", c.pluginConfig.ProjectNameSafe, mergedConfig.Service)
 
 	opts := dockerclient.AttachToContainerOptions{
@@ -259,7 +262,35 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 
 // Build will build all images in the Parity setup
 func (c *DockerCompose) Build(parity.BuilderConfig) error {
+	// client := utils.DockerClient()
+
+	// Check base up to date - md5 hash version
+
 	return nil
+}
+
+// generateContainerVersion creates a unique hash for a given Dockerfile.
+// It uses the contents of the Dockerfile and any package lock file (package.json, Gemfile etc.)
+// Replaces this shell: `echo $(md5Files $(find -L $1 -maxdepth 1 | egrep "(Gemfile.lock|package\.json|Dockerfile)"))`
+func (c *DockerCompose) generateContainerVersion(dirName string) string {
+	dir, _ := os.Open(dirName)
+	files, _ := dir.Readdir(-1)
+
+	var data []byte
+	regex, _ := regexp.CompilePOSIX(`(Gemfile.lock|package\.json|Dockerfile)`)
+
+	for _, f := range files {
+		if regex.MatchString(f.Name()) {
+			if d, err := ioutil.ReadFile(filepath.Join(dirName, f.Name())); err == nil {
+				data = append(data, d...)
+			}
+		}
+	}
+	if len(data) == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("%x", md5.Sum(data))
 }
 
 // Publish pushes all images to the registries

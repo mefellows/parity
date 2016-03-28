@@ -14,9 +14,9 @@ import (
 	"github.com/mefellows/parity/log"
 )
 
-// SetupConfig is the text/template structure used to expand out
+// Config is the text/template structure used to expand out
 // template values in the Parity Template file
-type SetupConfig struct {
+type Config struct {
 	ImageName          string
 	Base               string
 	Ci                 string
@@ -59,9 +59,9 @@ func tempFile(reader io.Reader, templateData interface{}) (*os.File, error) {
 	return file, nil
 }
 
-// expandAndValidateConfig takes the initial SetupConfig and expands the other variables
+// expandAndValidateConfig takes the initial Config and expands the other variables
 // sets defaults etc.
-func expandAndValidateConfig(config *SetupConfig) error {
+func expandAndValidateConfig(config *Config) error {
 	if config.Base == "" {
 		return fmt.Errorf("Missing required 'Base' configuration item to the Parity Template")
 	}
@@ -96,10 +96,10 @@ func expandAndValidateConfig(config *SetupConfig) error {
 	return nil
 }
 
-func SetupParityProject(config *SetupConfig) error {
+func SetupParityProject(config *Config) error {
 	log.Stage("Setup Parity Project")
 
-	// 1. Merge SetupConfig with Defaults -> need to create Base, Ci and Production image names
+	// 1. Merge Config with Defaults -> need to create Base, Ci and Production image names
 	if err := expandAndValidateConfig(config); err != nil {
 		return err
 	}
