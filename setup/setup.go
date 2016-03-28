@@ -43,10 +43,10 @@ func getDefaultTemplateUrl(templateName string) (string, error) {
 
 func tempFile(reader io.Reader, templateData interface{}) (*os.File, error) {
 	buffer := make([]byte, 8096)
-	_, err := reader.Read(buffer)
-	tmpl, err := template.New("").Parse(string(buffer))
+	i, err := reader.Read(buffer)
+	tmpl, err := template.New("").Parse(string(buffer[:i]))
 	if err != nil {
-		return nil, fmt.Errorf("Template failed:", err.Error())
+		return nil, fmt.Errorf("Template parsing failed:", err.Error())
 	}
 	file, _ := ioutil.TempFile("/tmp", "parity")
 	file.Chmod(0655)
@@ -100,7 +100,6 @@ func SetupParityProject(config *SetupConfig) error {
 	log.Stage("Setup Parity Project")
 
 	// 1. Merge SetupConfig with Defaults -> need to create Base, Ci and Production image names
-	dir, _ := os.Getwd()
 	if err := expandAndValidateConfig(config); err != nil {
 		return err
 	}
@@ -135,6 +134,7 @@ func SetupParityProject(config *SetupConfig) error {
 	go func() {
 		wg := sync.WaitGroup{}
 		wg.Add(len(parityTemplate))
+		dir, _ := os.Getwd()
 
 		for _, f := range parityTemplate {
 			go func(f string, errorChan chan error) {

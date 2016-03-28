@@ -112,6 +112,16 @@ including the `$DISPLAY` environment variables in your Docker containers.
 If you just want to setup a proxy for another non-Parity managed project, you can run `parity x`. This will setup create the Proxy as per above, but
 you'll need to manually setup the `$DISPLAY variable`. Parity will log to console the environment variable setup. It will look something like `export DISPLAY=192.168.99.1:0`.
 
+## Scaffolding projects
+
+If you are starting a brand new project, you might like to opt for Parity's opinionated workflow, which enforces Docker and continuous delivery best practices.
+
+Parity current has templates for Rails and Node, and you can get started with the `setup` command:
+
+```
+parity setup --template rails --base my-project2
+```
+
 ## Configuration File format
 
 ```yaml
@@ -177,6 +187,12 @@ Templates exist for the following language/frameworks:
 
 * [Rails](https://github.com/mefellows/parity-rails)
 * [Node](https://github.com/mefellows/parity-node)
+
+If you create your own (see below), you can have Parity scaffold your project as follows:
+
+```
+parity setup --templateSourceUrl=https://raw.githubusercontent.com/mefellows/parity-my-awesome-lang/master --base my-project2
+```
 
 ### Creating your own Templates
 
