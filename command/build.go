@@ -35,8 +35,11 @@ func (c *BuildCommand) Run(args []string) int {
 		log.SetOutput(ioutil.Discard)
 	}
 
+	c.Meta.Ui.Output("Building containers")
 	parity := app.New(&config.Config{Ui: c.Meta.Ui, ConfigFile: c.ConfigFile})
-	parity.Run()
+	if err := parity.Build(); err != nil {
+		c.Meta.Ui.Error(err.Error())
+	}
 
 	return 0
 }

@@ -7,10 +7,24 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 
+	dockerclient2 "github.com/docker/engine-api/client"
+	// dockertypes "github.com/docker/engine-api/types"
+	"github.com/Sirupsen/logrus"
+	"github.com/docker/docker/builder"
+	"github.com/docker/docker/builder/dockerignore"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/fileutils"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/progress"
+	"github.com/docker/docker/pkg/streamformatter"
+	"github.com/docker/docker/pkg/term"
+	"github.com/docker/engine-api/types"
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
 	dockerclient "github.com/fsouza/go-dockerclient"
@@ -19,6 +33,7 @@ import (
 	"github.com/mefellows/parity/parity"
 	"github.com/mefellows/parity/utils"
 	"github.com/mefellows/plugo/plugo"
+	"golang.org/x/net/context"
 )
 
 // DockerCompose is a type of Run Plugin, that uses Docker Compose
@@ -223,12 +238,11 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 		log.Step("Starting compose services")
 
 		injectDisplayEnvironmentVariables(c.project)
-		c.project.Up()
 	}
 
-	client := utils.DockerClient()
-	client.SkipServerVersionCheck = true
 	container := fmt.Sprintf("parity-%s_%s_1", c.pluginConfig.ProjectNameSafe, mergedConfig.Service)
+
+	client := utils.DockerClient()
 
 	createExecOptions := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
@@ -256,31 +270,74 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 		log.Error("error: %v", err.Error())
 	}
 
+	/*
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		client, _ := dockerclient2.NewEnvClient()
+		execConfig := dockertypes.ExecConfig{
+			User: mergedConfig.User, // User that will run the command
+			// Privileged   bool     // Is the container in privileged mode
+			Tty:          true,      // Attach standard streams to a tty.
+			Container:    container, // Name of the container (to execute in)
+			AttachStdin:  true,      // Attach the standard input, makes possible user interaction
+			AttachStderr: true,      // Attach the standard output
+			AttachStdout: true,      // Attach the standard error
+			Detach:       false,     // Execute in detach mode
+			// DetachKeys:   "ctrl-c",             // Escape keys for detach
+			Cmd: mergedConfig.Command, // Execution commands and args
+		}
+		execStartConfig := dockertypes.ExecStartCheck{
+			Tty:    true, // Attach standard streams to a tty.
+			Detach: false,
+		}
+
+		execId, err := client.ContainerExecCreate(ctx, execConfig)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+		err = client.ContainerExecStart(ctx, execId.ID, execStartConfig)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+		res, err := client.ContainerExecAttach(ctx, execId.ID, execConfig)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+		go res.Reader.WriteTo(os.Stdin)
+		go res.Reader.Reset(os.Stdout)
+		log.Step("started exec attach?")
+
+		// done := make(chan bool)
+		// <-done
+		// res.Close()
+		_, err = client.ContainerWait(ctx, execId.ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
+
 	log.Debug("Docker Compose Run() finished")
 	return err
-}
-
-// Build will build all images in the Parity setup
-func (c *DockerCompose) Build(parity.BuilderConfig) error {
-	// client := utils.DockerClient()
-
-	// Check base up to date - md5 hash version
-
-	return nil
 }
 
 // generateContainerVersion creates a unique hash for a given Dockerfile.
 // It uses the contents of the Dockerfile and any package lock file (package.json, Gemfile etc.)
 // Replaces this shell: `echo $(md5Files $(find -L $1 -maxdepth 1 | egrep "(Gemfile.lock|package\.json|Dockerfile)"))`
-func (c *DockerCompose) generateContainerVersion(dirName string) string {
+func (c *DockerCompose) generateContainerVersion(dirName string, dockerfile string) string {
+	log.Debug("Looking for %s and related package files in: %s", dockerfile, dirName)
 	dir, _ := os.Open(dirName)
 	files, _ := dir.Readdir(-1)
 
 	var data []byte
-	regex, _ := regexp.CompilePOSIX(`(Gemfile.lock|package\.json|Dockerfile)`)
+	regex, _ := regexp.CompilePOSIX(fmt.Sprintf("(Gemfile.lock|package\\.json|^%s$)", dockerfile))
 
 	for _, f := range files {
 		if regex.MatchString(f.Name()) {
+			log.Debug("Found file: %s", f.Name())
 			if d, err := ioutil.ReadFile(filepath.Join(dirName, f.Name())); err == nil {
 				data = append(data, d...)
 			}
@@ -300,7 +357,7 @@ func (c *DockerCompose) Publish(parity.BuilderConfig) error {
 
 // Configure sets up this plugin with initial state
 func (c *DockerCompose) Configure(pc *parity.PluginConfig) {
-	log.Debug("Configuring 'Docker Machine' 'Run' plugin")
+	log.Debug("Configuring 'Docker Machine' 'Run\\Build\\Shell' plugin")
 	c.pluginConfig = pc
 	var err error
 	if c.project, err = c.GetProject(); err != nil {
@@ -316,4 +373,165 @@ func (c *DockerCompose) Teardown() error {
 		c.project.Down()
 	}
 	return nil
+}
+
+// CreateTar create a build context tar for the specified project and service name.
+func (c *DockerCompose) CreateTar(root string, dockerfile string) (io.ReadCloser, error) {
+	// This code was mostly ripped off from docker/api/client/build.go
+
+	dockerfileName := filepath.Join(root, dockerfile)
+
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := dockerfileName
+
+	if dockerfileName == "" {
+		// No -f/--file was specified so use the default
+		dockerfileName = "Dockerfile"
+		filename = filepath.Join(absRoot, dockerfileName)
+
+		// Just to be nice ;-) look for 'dockerfile' too but only
+		// use it if we found it, otherwise ignore this check
+		if _, err = os.Lstat(filename); os.IsNotExist(err) {
+			tmpFN := path.Join(absRoot, strings.ToLower(dockerfileName))
+			if _, err = os.Lstat(tmpFN); err == nil {
+				dockerfileName = strings.ToLower(dockerfileName)
+				filename = tmpFN
+			}
+		}
+	}
+
+	origDockerfile := dockerfileName // used for error msg
+	if filename, err = filepath.Abs(filename); err != nil {
+		return nil, err
+	}
+
+	// Now reset the dockerfileName to be relative to the build context
+	dockerfileName, err = filepath.Rel(absRoot, filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// And canonicalize dockerfile name to a platform-independent one
+	dockerfileName, err = archive.CanonicalTarNameForPath(dockerfileName)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot canonicalize dockerfile path %s: %v", dockerfileName, err)
+	}
+
+	if _, err = os.Lstat(filename); os.IsNotExist(err) {
+		return nil, fmt.Errorf("Cannot locate Dockerfile: %s", origDockerfile)
+	}
+	var includes = []string{"."}
+	var excludes []string
+
+	dockerIgnorePath := path.Join(root, ".dockerignore")
+	dockerIgnore, err := os.Open(dockerIgnorePath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+		logrus.Warnf("Error while reading .dockerignore (%s) : %s", dockerIgnorePath, err.Error())
+		excludes = make([]string, 0)
+	} else {
+		excludes, err = dockerignore.ReadAll(dockerIgnore)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// If .dockerignore mentions .dockerignore or the Dockerfile
+	// then make sure we send both files over to the daemon
+	// because Dockerfile is, obviously, needed no matter what, and
+	// .dockerignore is needed to know if either one needs to be
+	// removed.  The deamon will remove them for us, if needed, after it
+	// parses the Dockerfile.
+	keepThem1, _ := fileutils.Matches(".dockerignore", excludes)
+	keepThem2, _ := fileutils.Matches(dockerfileName, excludes)
+	if keepThem1 || keepThem2 {
+		includes = append(includes, ".dockerignore", dockerfileName)
+	}
+
+	if err := builder.ValidateContextDirectory(root, excludes); err != nil {
+		return nil, fmt.Errorf("Error checking context is accessible: '%s'. Please check permissions and try again.", err)
+	}
+
+	options := &archive.TarOptions{
+		Compression:     archive.Uncompressed,
+		ExcludePatterns: excludes,
+		IncludeFiles:    includes,
+	}
+
+	return archive.TarWithOptions(root, options)
+}
+
+// Build will build all images in the Parity setup
+func (c *DockerCompose) Build(config parity.BuilderConfig) error {
+	log.Stage("Bulding containers")
+	base := "Dockerfile"
+	cwd, _ := os.Getwd()
+	baseVersion := c.generateContainerVersion(cwd, base)
+	imageName := fmt.Sprintf("%s:%s", "web", baseVersion)
+	// imageName := fmt.Sprintf("%s:%s", config.ImageName, baseVersion)
+	client, _ := dockerclient2.NewEnvClient()
+
+	log.Step("Checking if image %s exists locally", imageName)
+	if images, err := client.ImageList(context.Background(), types.ImageListOptions{MatchName: imageName}); err == nil {
+		for _, i := range images {
+			log.Info("Found image: %s", i.ID)
+			return nil
+		}
+	}
+
+	log.Step("Image %s not found locally, pulling", imageName)
+	client.ImagePull(context.Background(), types.ImagePullOptions{ImageID: imageName}, nil)
+
+	log.Step("Image %s not found anywhere, building", imageName)
+
+	ctx, err := c.CreateTar(".", "Dockerfile")
+	if err != nil {
+		return err
+	}
+	defer ctx.Close()
+
+	var progBuff io.Writer = os.Stdout
+	var buildBuff io.Writer = os.Stdout
+
+	// Setup an upload progress bar
+	progressOutput := streamformatter.NewStreamFormatter().NewProgressOutput(progBuff, true)
+
+	var body io.Reader = progress.NewProgressReader(ctx, progressOutput, 0, "", "Sending build context to Docker daemon")
+
+	logrus.Infof("Building %s...", imageName)
+
+	outFd, isTerminalOut := term.GetFdInfo(os.Stdout)
+
+	response, err := client.ImageBuild(context.Background(), types.ImageBuildOptions{
+		Context:    body,
+		Tags:       []string{imageName},
+		NoCache:    false,
+		Remove:     true,
+		Dockerfile: "Dockerfile",
+		// AuthConfigs: d.context.ConfigFile.AuthConfigs,
+	})
+
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	err = jsonmessage.DisplayJSONMessagesStream(response.Body, buildBuff, outFd, isTerminalOut, nil)
+	if err != nil {
+		if jerr, ok := err.(*jsonmessage.JSONError); ok {
+			// If no error code is set, default to 1
+			if jerr.Code == 0 {
+				jerr.Code = 1
+			}
+			fmt.Fprintf(os.Stderr, "%s%s", progBuff, buildBuff)
+			return fmt.Errorf("Status: %s, Code: %d", jerr.Message, jerr.Code)
+		}
+	}
+	return err
 }

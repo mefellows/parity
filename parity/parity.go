@@ -28,6 +28,7 @@ type Parity struct {
 	config       *config.Config
 	SyncPlugins  []Sync
 	RunPlugins   []Run
+	BuildPlugins []Builder
 	ShellPlugins []Shell
 	pluginConfig *PluginConfig
 	errorChan    chan error
@@ -80,6 +81,17 @@ func (p *Parity) LoadPlugins() {
 		p.plugins = append(p.plugins, p.RunPlugins[i])
 	}
 
+	// Build plugins
+	p.BuildPlugins = make([]Builder, len(c.Build))
+	buildPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Build)
+
+	for i, pl := range buildPlugins {
+		log.Debug("Loading Build Plugin\t" + log.Colorize(log.YELLOW, c.Build[i].Name))
+		p.BuildPlugins[i] = pl.(Builder)
+		p.BuildPlugins[i].Configure(p.pluginConfig)
+		p.plugins = append(p.plugins, p.BuildPlugins[i])
+	}
+
 	// Shell plugins
 	p.ShellPlugins = make([]Shell, len(c.Shell))
 	shellPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Shell)
@@ -121,6 +133,22 @@ func New(config *config.Config) *Parity {
 func NewWithDefault() *Parity {
 	c := &config.Config{}
 	return &Parity{config: c}
+}
+
+// Build runs all builders on the project, e.g. Docker build
+func (p *Parity) Build() error {
+	log.Debug("Loading plugins...")
+	p.LoadPlugins()
+
+	// Execute all plugins in parallel?
+	// TODO: Initial Sync may need to be blocking so that Run
+	//       can work?
+	for _, pl := range p.BuildPlugins {
+		if err := pl.Build(BuilderConfig{}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Run Parity - the main application entrypoint

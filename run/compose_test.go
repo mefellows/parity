@@ -9,7 +9,7 @@ import (
 func TestGenerateContainerVersion_NoFiles(t *testing.T) {
 	c := &DockerCompose{}
 	dir, _ := os.Getwd()
-	res := c.generateContainerVersion(dir)
+	res := c.generateContainerVersion(dir, "Dockerfile")
 	if res != "" {
 		t.Fatalf("Expected an empty MD5 hash, got '%s'", res)
 	}
@@ -58,7 +58,7 @@ func TestGenerateContainerVersion_WithFiles(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	c := &DockerCompose{}
-	res := c.generateContainerVersion(tempDir)
+	res := c.generateContainerVersion(tempDir, "Dockerfile")
 	if res != "fcc849bd02e7f688f1704e82e1c3751a" {
 		t.Fatalf("Expected 'fcc849bd02e7f688f1704e82e1c3751a', got '%s'", res)
 	}
