@@ -13,8 +13,6 @@ import (
 	"runtime"
 	"strings"
 
-	dockerclient2 "github.com/docker/engine-api/client"
-	// dockertypes "github.com/docker/engine-api/types"
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/builder"
 	"github.com/docker/docker/builder/dockerignore"
@@ -24,6 +22,7 @@ import (
 	"github.com/docker/docker/pkg/progress"
 	"github.com/docker/docker/pkg/streamformatter"
 	"github.com/docker/docker/pkg/term"
+	dockerclient2 "github.com/docker/engine-api/client"
 	"github.com/docker/engine-api/types"
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
@@ -41,6 +40,7 @@ import (
 type DockerCompose struct {
 	ComposeFile  string `default:"docker-compose.yml" required:"true" mapstructure:"composefile"`
 	XProxyPort   int    `default:"6000" required:"true" mapstructure:"x_proxy_port"`
+	ImageName    string `mapstructure:"image_name"`
 	pluginConfig *parity.PluginConfig
 	project      *project.Project
 }
@@ -134,6 +134,10 @@ func (c *DockerCompose) runXServerProxy() {
 // Detects docker-compose.yml files, builds and runs.
 func (c *DockerCompose) Run() (err error) {
 	log.Stage("Run Docker")
+	log.Step("Building base image")
+
+	c.Build()
+
 	log.Step("Building compose project")
 
 	if c.project != nil {
@@ -270,56 +274,6 @@ func (c *DockerCompose) Shell(config parity.ShellConfig) (err error) {
 		log.Error("error: %v", err.Error())
 	}
 
-	/*
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		client, _ := dockerclient2.NewEnvClient()
-		execConfig := dockertypes.ExecConfig{
-			User: mergedConfig.User, // User that will run the command
-			// Privileged   bool     // Is the container in privileged mode
-			Tty:          true,      // Attach standard streams to a tty.
-			Container:    container, // Name of the container (to execute in)
-			AttachStdin:  true,      // Attach the standard input, makes possible user interaction
-			AttachStderr: true,      // Attach the standard output
-			AttachStdout: true,      // Attach the standard error
-			Detach:       false,     // Execute in detach mode
-			// DetachKeys:   "ctrl-c",             // Escape keys for detach
-			Cmd: mergedConfig.Command, // Execution commands and args
-		}
-		execStartConfig := dockertypes.ExecStartCheck{
-			Tty:    true, // Attach standard streams to a tty.
-			Detach: false,
-		}
-
-		execId, err := client.ContainerExecCreate(ctx, execConfig)
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-		err = client.ContainerExecStart(ctx, execId.ID, execStartConfig)
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-		res, err := client.ContainerExecAttach(ctx, execId.ID, execConfig)
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-		go res.Reader.WriteTo(os.Stdin)
-		go res.Reader.Reset(os.Stdout)
-		log.Step("started exec attach?")
-
-		// done := make(chan bool)
-		// <-done
-		// res.Close()
-		_, err = client.ContainerWait(ctx, execId.ID)
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
-
 	log.Debug("Docker Compose Run() finished")
 	return err
 }
@@ -351,7 +305,7 @@ func (c *DockerCompose) generateContainerVersion(dirName string, dockerfile stri
 }
 
 // Publish pushes all images to the registries
-func (c *DockerCompose) Publish(parity.BuilderConfig) error {
+func (c *DockerCompose) Publish() error {
 	return nil
 }
 
@@ -468,13 +422,12 @@ func (c *DockerCompose) CreateTar(root string, dockerfile string) (io.ReadCloser
 }
 
 // Build will build all images in the Parity setup
-func (c *DockerCompose) Build(config parity.BuilderConfig) error {
+func (c *DockerCompose) Build() error {
 	log.Stage("Bulding containers")
 	base := "Dockerfile"
 	cwd, _ := os.Getwd()
 	baseVersion := c.generateContainerVersion(cwd, base)
-	imageName := fmt.Sprintf("%s:%s", "web", baseVersion)
-	// imageName := fmt.Sprintf("%s:%s", config.ImageName, baseVersion)
+	imageName := fmt.Sprintf("%s:%s", c.ImageName, baseVersion)
 	client, _ := dockerclient2.NewEnvClient()
 
 	log.Step("Checking if image %s exists locally", imageName)
@@ -508,13 +461,13 @@ func (c *DockerCompose) Build(config parity.BuilderConfig) error {
 
 	outFd, isTerminalOut := term.GetFdInfo(os.Stdout)
 
+	// Publish latest and specific version
 	response, err := client.ImageBuild(context.Background(), types.ImageBuildOptions{
 		Context:    body,
-		Tags:       []string{imageName},
+		Tags:       []string{imageName, fmt.Sprintf("%s:latest", c.ImageName)},
 		NoCache:    false,
 		Remove:     true,
 		Dockerfile: "Dockerfile",
-		// AuthConfigs: d.context.ConfigFile.AuthConfigs,
 	})
 
 	if err != nil {
@@ -533,5 +486,6 @@ func (c *DockerCompose) Build(config parity.BuilderConfig) error {
 			return fmt.Errorf("Status: %s, Code: %d", jerr.Message, jerr.Code)
 		}
 	}
+
 	return err
 }

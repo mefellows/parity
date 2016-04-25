@@ -1,7 +1,6 @@
 package parity
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -24,6 +23,7 @@ var banner = `
 
 `
 
+// Parity contains the top level configuration for Parity (plugins etc.)
 type Parity struct {
 	config       *config.Config
 	SyncPlugins  []Sync
@@ -35,6 +35,8 @@ type Parity struct {
 	plugins      []Plugin
 }
 
+// LoadPlugins loads all plugins referenced in the parity.yml file
+// from those registered at runtime
 func (p *Parity) LoadPlugins() {
 	log.Debug("loading plugins")
 	var err error
@@ -104,21 +106,22 @@ func (p *Parity) LoadPlugins() {
 	}
 }
 
+// GetPlugin gets a plugin by name (no type)
 func (p *Parity) GetPlugin(name string) (pl interface{}, err error) {
 	for _, pl := range p.plugins {
 		if pl.Name() == name {
 			return pl, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Plugin '%s' not found", name))
+	return nil, fmt.Errorf("Plugin '%s' not found", name)
 }
 
+// GetShellPlugin gets a plugin by name and converts to a Shell
 func (p *Parity) GetShellPlugin(plugin string) (Shell, error) {
 	if pl, err := p.GetPlugin(plugin); err == nil {
 		return pl.(Shell), nil
-	} else {
-		return nil, err
 	}
+	return nil, nil
 }
 
 // MergeConfig merges ~/.parityrc with any ./parity.yml files
@@ -126,10 +129,12 @@ func (p *Parity) mergeConfig() {
 	// https://github.com/imdario/mergo -> MergeWithOverride
 }
 
+// New creates a default instance of Parity, using the provided config
 func New(config *config.Config) *Parity {
 	return &Parity{config: config}
 }
 
+// NewWithDefault creates a new instance of Parity with default settings
 func NewWithDefault() *Parity {
 	c := &config.Config{}
 	return &Parity{config: c}
@@ -140,11 +145,8 @@ func (p *Parity) Build() error {
 	log.Debug("Loading plugins...")
 	p.LoadPlugins()
 
-	// Execute all plugins in parallel?
-	// TODO: Initial Sync may need to be blocking so that Run
-	//       can work?
 	for _, pl := range p.BuildPlugins {
-		if err := pl.Build(BuilderConfig{}); err != nil {
+		if err := pl.Build(); err != nil {
 			return err
 		}
 	}
@@ -165,7 +167,7 @@ func (p *Parity) Run() {
 		p.runAsync(pl.Sync)
 	}
 
-	//
+	// Run all Runners
 	for _, pl := range p.RunPlugins {
 		p.runAsync(pl.Run)
 	}
@@ -192,6 +194,7 @@ func (p *Parity) runAsync(f func() error) {
 	}()
 }
 
+// Teardown safely shuts down all registered plugins
 func (p *Parity) Teardown() {
 	group := &sync.WaitGroup{}
 

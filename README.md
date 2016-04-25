@@ -52,6 +52,10 @@ Additionally, Parity will not require any other external dependencies, except th
 brew install https://raw.githubusercontent.com/mefellows/parity/spike/scripts/parity.rb
 ```
 
+### Download a release
+
+Grab the latest [release](/mefellows/parity/releases) and put it somewhere on your `PATH`.
+
 ### Using Go Get
 
 ```bash
@@ -222,7 +226,7 @@ Within the Template files, you can use the following variables using the usual g
 | Base       | The Base docker image   | n/a              | awesome-proj      | yes        |
 | Ci         | CI container image      | `{{.Base}}-ci`   | awesome-proj-ci   | no         |
 | Dist       | Prod container image    | `{{.Base}}-dist` | awesome-proj-dist | no         |
-| Version    | Application version     | n/a              | 1.0.0             | yes        |
+| Version    | Application version     | latest           | 1.0.0             | yes        |
 
 
 ## Similar Projects

@@ -53,12 +53,12 @@ func (c *SetupCommand) Help() string {
 	helpText := `
 Usage: parity setup [options]
 
-  Setup a new Parity project in the current working directory.
+  Setup a new template-based Parity project in the current working directory.
 
 Options:
 
   --template                 Specify a template name e.g. "rails", "node".
-  --templateSourceUrl        Specify a template location (e.g. https://github.com/mefellows/parity) to use as a starting point.
+  --templateSourceUrl        Specify a template location (e.g. https://github.com/mefellows/parity-rails) to use as a starting point.
   --base                     Base docker image name e.g. my-awesome-project.
   --version                  Docker container version.
   --force                    Overwrite any existing files when expanding the template.
@@ -69,5 +69,5 @@ Options:
 }
 
 func (c *SetupCommand) Synopsis() string {
-	return "Setup a new application based on a prototype"
+	return "Setup a new Parity application based on a prototype"
 }

@@ -6,10 +6,10 @@ class Parity < Formula
 
   if Hardware.is_64_bit?
     url "https://github.com/mefellows/parity/releases/download/#{version}/darwin_amd64.zip"
-    sha1 'd8cd1e5a3c10ed3f11578b6b8dd80a1d2e34dfb3'
+    sha1 'a63cbb1431cf9a1b48e01834361875b919280dcf'
   else
     url "https://github.com/mefellows/parity/releases/download/#{version}/darwin_386.zip"
-    sha1 '867d36638b65971e44536ec754b607d22382930e'
+    sha1 'f9802545b0be43990d99ffabd19f74e12c923310'
   end
 
   depends_on :arch => :intel
