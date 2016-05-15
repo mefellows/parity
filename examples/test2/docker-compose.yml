@@ -1,0 +1,29 @@
+postgres:
+  image: postgres:latest
+  restart: always
+  expose:
+   - "5432"
+  environment:
+  - POSTGRES_PASSWORD=password
+  - POSTGRES_USER=root
+  - POSTGRES_DB=test
+  # TODO: Manage your volume here!
+  #volumes:
+  #  - "/var/storage/postgres/data/:/var/lib/postgresql/data"
+
+web:
+  build: .
+  dockerfile: Dockerfile.dist
+  command: bundle exec rails s -p 80 -b '0.0.0.0'
+  restart: always
+  volumes:
+  - ".:/var/app"
+  links:
+  - postgres:db
+  environment:
+  - DATABASE_HOST=db
+  - SECRET_KEY_BASE=6d7632516d6049e7ae0e3d8bc0dbc058f5791d1da27ad993a76af32e0aebbb6aa08037abe7ae6df37521f6482882b6473b58d69d130dd461e8d8e3f674902456s
+  expose:
+  - 80
+  ports:
+  - "80:80"

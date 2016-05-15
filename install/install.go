@@ -9,73 +9,22 @@ import (
 	"github.com/mefellows/parity/log"
 	"github.com/mefellows/parity/utils"
 	"github.com/mefellows/parity/version"
-	"github.com/mitchellh/multistep"
 	"github.com/tmc/scp"
 )
 
-type stepAdd struct{}
-
-func (s *stepAdd) Run(state multistep.StateBag) multistep.StepAction {
-	// Read our value and assert that it is they type we want
-	value := state.Get("value").(int)
-	fmt.Printf("Value is %d\n", value)
-
-	// Store some state back
-	state.Put("value", value+1)
-	return multistep.ActionContinue
-}
-
-func (s *stepAdd) Cleanup(multistep.StateBag) {
-	// This is called after all the steps have run or if the runner is
-	// cancelled so that cleanup can be performed.
-	log.Info("Cleaning up some step...")
-}
-
+// InstallConfig is the configuration for the Installer
 type InstallConfig struct {
 	Dns     bool
 	DevHost string
 }
 
+// InstallParity installs Parity into the running Docker Machine
 func InstallParity(config InstallConfig) {
 	log.Stage("Install Parity")
 
 	if config.DevHost == "" {
 		config.DevHost = "parity.local"
 	}
-	// done := make(chan bool)
-	// // Interrupt handler
-	// sigChan := make(chan os.Signal, 1)
-	// signal.Notify(sigChan, os.Interrupt, os.Kill)
-	//
-	// // Our "bag of state" that we read the value from
-	// state := new(multistep.BasicStateBag)
-	// state.Put("value", 0)
-	//
-	// steps := []multistep.Step{
-	// 	&stepAdd{},
-	// 	&stepAdd{},
-	// 	&stepAdd{},
-	// }
-	//
-	// runner := &multistep.BasicRunner{Steps: steps}
-	//
-	// go func() {
-	// 	// Executes the steps
-	// 	runner.Run(state)
-	// 	<-done
-	// }()
-	//
-	// select {
-	// case <-done:
-	// 	log.Info("Done stepping stuff")
-	// case <-sigChan:
-	// 	log.Info("Cancel signal arrived...")
-	//
-	// 	// Wrap this in an interruptable mechanism
-	// 	runner.Cancel()
-	// }
-	//
-	// log.Info("chan completed!")
 
 	// Create DNS entry
 	if config.Dns {

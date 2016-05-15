@@ -37,5 +37,5 @@ Usage: parity init
 }
 
 func (c *InitCommand) Synopsis() string {
-	return "Initialise Parity"
+	return "Create default Parity project"
 }

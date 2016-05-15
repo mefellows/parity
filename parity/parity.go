@@ -1,7 +1,6 @@
 package parity
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -24,16 +23,20 @@ var banner = `
 
 `
 
+// Parity contains the top level configuration for Parity (plugins etc.)
 type Parity struct {
 	config       *config.Config
 	SyncPlugins  []Sync
 	RunPlugins   []Run
+	BuildPlugins []Builder
 	ShellPlugins []Shell
 	pluginConfig *PluginConfig
 	errorChan    chan error
 	plugins      []Plugin
 }
 
+// LoadPlugins loads all plugins referenced in the parity.yml file
+// from those registered at runtime
 func (p *Parity) LoadPlugins() {
 	log.Debug("loading plugins")
 	var err error
@@ -80,6 +83,17 @@ func (p *Parity) LoadPlugins() {
 		p.plugins = append(p.plugins, p.RunPlugins[i])
 	}
 
+	// Build plugins
+	p.BuildPlugins = make([]Builder, len(c.Build))
+	buildPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Build)
+
+	for i, pl := range buildPlugins {
+		log.Debug("Loading Build Plugin\t" + log.Colorize(log.YELLOW, c.Build[i].Name))
+		p.BuildPlugins[i] = pl.(Builder)
+		p.BuildPlugins[i].Configure(p.pluginConfig)
+		p.plugins = append(p.plugins, p.BuildPlugins[i])
+	}
+
 	// Shell plugins
 	p.ShellPlugins = make([]Shell, len(c.Shell))
 	shellPlugins := plugo.LoadPluginsWithConfig(confLoader, c.Shell)
@@ -92,21 +106,22 @@ func (p *Parity) LoadPlugins() {
 	}
 }
 
+// GetPlugin gets a plugin by name (no type)
 func (p *Parity) GetPlugin(name string) (pl interface{}, err error) {
 	for _, pl := range p.plugins {
 		if pl.Name() == name {
 			return pl, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Plugin '%s' not found", name))
+	return nil, fmt.Errorf("Plugin '%s' not found", name)
 }
 
+// GetShellPlugin gets a plugin by name and converts to a Shell
 func (p *Parity) GetShellPlugin(plugin string) (Shell, error) {
 	if pl, err := p.GetPlugin(plugin); err == nil {
 		return pl.(Shell), nil
-	} else {
-		return nil, err
 	}
+	return nil, nil
 }
 
 // MergeConfig merges ~/.parityrc with any ./parity.yml files
@@ -114,13 +129,28 @@ func (p *Parity) mergeConfig() {
 	// https://github.com/imdario/mergo -> MergeWithOverride
 }
 
+// New creates a default instance of Parity, using the provided config
 func New(config *config.Config) *Parity {
 	return &Parity{config: config}
 }
 
+// NewWithDefault creates a new instance of Parity with default settings
 func NewWithDefault() *Parity {
 	c := &config.Config{}
 	return &Parity{config: c}
+}
+
+// Build runs all builders on the project, e.g. Docker build
+func (p *Parity) Build() error {
+	log.Debug("Loading plugins...")
+	p.LoadPlugins()
+
+	for _, pl := range p.BuildPlugins {
+		if err := pl.Build(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Run Parity - the main application entrypoint
@@ -137,7 +167,7 @@ func (p *Parity) Run() {
 		p.runAsync(pl.Sync)
 	}
 
-	//
+	// Run all Runners
 	for _, pl := range p.RunPlugins {
 		p.runAsync(pl.Run)
 	}
@@ -149,7 +179,6 @@ func (p *Parity) Run() {
 
 	select {
 	case e := <-p.errorChan:
-		log.Debug("Received error:")
 		log.Error(e.Error())
 	case <-sigChan:
 		log.Debug("Received interrupt, shutting down.")
@@ -165,6 +194,7 @@ func (p *Parity) runAsync(f func() error) {
 	}()
 }
 
+// Teardown safely shuts down all registered plugins
 func (p *Parity) Teardown() {
 	group := &sync.WaitGroup{}
 

@@ -11,7 +11,7 @@ Docker is awesome, but it suffers from a few annoying drawbacks:
 
 Parity addresses this shortcomings, simplifying Docker for local development.
 
-*NOTE*: This project, in particular the file syncing problem, will only be partially superceded by [Docker](https://blog.docker.com/2016/03/docker-for-mac-windows-beta/) when it itself is out of beta. It will also replace items 1-3, leaving Parity to deal with the opinionated setup problem and improving the workflow for development. This is great news for everyone!
+*NOTE*: This project, in particular the file syncing problem, will only be partially superceded by [Docker](https://blog.docker.com/2016/03/docker-for-mac-windows-beta/) when it itself is out of beta. It will also replace items 1-3, leaving Parity to deal with the opinionated setup problem and improving the workflow for development. This is great news for everyone! As Parity is completely plugin-based, you can simple omit plugins (e.g. the `sync` plugin) that are superceded by Docker, with no change to your workflow.
 
 [![wercker status](https://app.wercker.com/status/be9372da6e34efdf671fb7ebdea591ec/s "wercker status")](https://app.wercker.com/project/bykey/be9372da6e34efdf671fb7ebdea591ec)
 [![Coverage Status](https://coveralls.io/repos/github/mefellows/parity/badge.svg?branch=master)](https://coveralls.io/github/mefellows/parity?branch=master)
@@ -52,6 +52,10 @@ Additionally, Parity will not require any other external dependencies, except th
 brew install https://raw.githubusercontent.com/mefellows/parity/spike/scripts/parity.rb
 ```
 
+### Download a release
+
+Grab the latest [release](/mefellows/parity/releases) and put it somewhere on your `PATH`.
+
 ### Using Go Get
 
 ```bash
@@ -60,7 +64,7 @@ go get github.com/mefellows/parity
 
 ## Installation
 
-Simply run `parity install` and follow the prompts.
+Ensure the usual Docker [environment variables](https://docs.docker.com/machine/get-started/#create-a-machine) are exported, then simply run `parity install` and follow the prompts.
 
 ### Creating default host entry
 
@@ -112,9 +116,118 @@ including the `$DISPLAY` environment variables in your Docker containers.
 If you just want to setup a proxy for another non-Parity managed project, you can run `parity x`. This will setup create the Proxy as per above, but
 you'll need to manually setup the `$DISPLAY variable`. Parity will log to console the environment variable setup. It will look something like `export DISPLAY=192.168.99.1:0`.
 
+## Scaffolding projects
+
+If you are starting a brand new project, you might like to opt for Parity's opinionated workflow, which enforces Docker and continuous delivery best practices.
+
+Parity current has templates for Rails and Node, and you can get started with the `setup` command:
+
+```
+parity setup --template rails --base my-project2
+```
+
 ## Configuration File format
 
-TODO
+```yaml
+## The Project Name
+name: My Awesome Project
+
+## Log Level (0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error, 5 = Fatal)
+loglevel: 2
+
+## Plugin configuration.
+##
+## Parity is essentially a wrapper for Plugins. You can use as much or as little
+## as you need. e.g. If you don't need to sync files, simple remove the 'sync' plugin.
+
+## Runtime plugin configuration
+##
+## Configures the Docker Compose runner
+run:
+  - name: compose
+    config:
+      composefile: .parity/docker-compose.yml.dev
+
+## File synchronisation plugin configuration.
+##
+## Configures the file synchronisation Plugin, using Mirror (https://github.com/mefellows/mirror) by default
+## This will eventually be superceded by Docker, when native virtualisation comes to OSX + Windows
+sync:
+  - name: mirror
+    config:
+      verbose: false
+      exclude:
+        - tmp
+        - \.log$
+        - \.git
+
+## Shell plugin: Enables shelling into an Interactive Docker terminal.
+##
+## This Plugin allows us to shell into an Interactive terminal via Docker Compose
+shell:
+  - name: compose
+
+## Docker Registry plugin configuration.
+##
+## Configures the location images are retrieved from/pushed to.
+registry:
+  - name: default
+    config:
+      host: parity.local:5000
+
+## Docker Image Builder plugin configuration.  
+##
+## Configures how images are built and pushed to a Registry.
+builder:
+  - name: compose
+    config:
+      - image_name: parity-test
+
+```
+
+## Parity Templates
+
+Templates exist for the following language/frameworks:
+
+* [Rails](https://github.com/mefellows/parity-rails)
+* [Node](https://github.com/mefellows/parity-node)
+
+If you create your own (see below), you can have Parity scaffold your project as follows:
+
+```
+parity setup --templateSourceUrl=https://raw.githubusercontent.com/mefellows/parity-my-awesome-lang/master --base my-project2
+```
+
+### Creating your own Templates
+
+Parity Templates must adhere to a specific pattern and must be internet accessible. The easiest way to go is creating a public GitHub repository, with the following layout:
+
+```
+├── .parity                  Contains template configuration files (e.g. DB init scripts etc.)
+│   ├── TEMPLATE SPECIFIC CONFIGURATION FILES
+├── Dockerfile               The Base Docker Image.
+├── Dockerfile.ci            The CI/Build Docker Image. Inherits from Base.
+├── Dockerfile.dist          The Production Docker Image. Inherits from Base.
+├── docker-compose.yml       Production Docker Compose setup.
+├── docker-compose.yml.dev   Local development Docker Compose setup.
+├── parity.yml               Pre-configured parity.yml file for the Template.
+└── index.txt                A file containing a manifest of all files required in the template.
+```
+
+Additional files may be included, provided that are noted in the Parity Template manifest `/index.txt`. By convention these files should lie in the `./.parity` folder.
+
+*Template expansion variables*
+
+Within the Template files, you can use the following variables using the usual golang
+[text/template expansion](https://golang.org/pkg/text/template/) rules e.g. `{{.Base}}:{{.Version}}`:
+
+|  Variable  |       Description       |  Default         |    Example        |  Required  |
+|------------|:------------------------|:-----------------|:------------------|:-----------|
+| Base       | The Base docker image   | n/a              | awesome-proj      | yes        |
+| Ci         | CI container image      | `{{.Base}}-ci`   | awesome-proj-ci   | no         |
+| Dist       | Prod container image    | `{{.Base}}-dist` | awesome-proj-dist | no         |
+| Version    | Application version     | latest           | 1.0.0             | yes        |
+
 
 ## Similar Projects
 

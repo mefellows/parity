@@ -14,10 +14,9 @@ import (
 
 	"github.com/docker/libcompose/docker"
 	"github.com/docker/libcompose/project"
+	dockerclient "github.com/fsouza/go-dockerclient"
 	mutils "github.com/mefellows/mirror/filesystem/utils"
 	"github.com/mefellows/parity/log"
-	// "github.com/docker/machine/libmachine"
-	dockerclient "github.com/fsouza/go-dockerclient"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -72,6 +71,18 @@ func dockerCertPath() string {
 	return fmt.Sprintf("%s/id_rsa", os.Getenv("DOCKER_CERT_PATH"))
 }
 
+// DefaultParityConfigurationFile gets the default parity configuration file
+func DefaultParityConfigurationFile() string {
+	dir, _ := os.Getwd()
+	return fmt.Sprintf("%s/parity.yml", dir)
+}
+
+// DefaultComposeFile gets the default docker-compose.yml file
+func DefaultComposeFile() string {
+	dir, _ := os.Getwd()
+	return fmt.Sprintf("%s/docker-compose.yml", dir)
+}
+
 // FindNetwork will return the IP and Network interface
 // given an IP address.
 func FindNetwork(ip string) (net.IP, net.Addr, error) {
@@ -104,6 +115,7 @@ func DockerClient() *dockerclient.Client {
 	if err != nil {
 		log.Fatalf("Unabled to create a Docker Client: Is Docker Machine installed and running?")
 	}
+	client.SkipServerVersionCheck = true
 	return client
 }
 
@@ -336,4 +348,44 @@ func ReadComposeVolumes() []string {
 // ProjectNameSafe creates a Docker Compose compatible (safe) name given a string
 func ProjectNameSafe(name string) string {
 	return strings.Replace(strings.ToLower(name), " ", "", -1)
+}
+
+// CleanupDockerContainersList returns a list of containers to be removed
+func CleanupDockerContainersList() ([]dockerclient.APIContainers, error) {
+	client := DockerClient()
+	listOpts := dockerclient.ListContainersOptions{
+		Filters: map[string][]string{
+			"status": []string{"exited"},
+		},
+	}
+
+	return client.ListContainers(listOpts)
+}
+
+// CleanupDockerImageList returns a list of images to be removed
+func CleanupDockerImageList() ([]dockerclient.APIImages, error) {
+	client := DockerClient()
+	listOpts := dockerclient.ListImagesOptions{
+		Filters: map[string][]string{
+			"dangling": []string{"true"},
+		},
+	}
+
+	return client.ListImages(listOpts)
+}
+
+// Cleanup removes dangling images and exited containers.
+func Cleanup() {
+	client := DockerClient()
+	if list, err := CleanupDockerImageList(); err == nil {
+		for _, i := range list {
+			client.RemoveImage(i.ID)
+		}
+	}
+	if list, err := CleanupDockerContainersList(); err == nil {
+		for _, c := range list {
+			opts := dockerclient.RemoveContainerOptions{ID: c.ID}
+			client.RemoveContainer(opts)
+		}
+	}
 }

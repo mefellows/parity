@@ -2,22 +2,22 @@ package command
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 
-	"os"
 	"strings"
 
 	"github.com/mefellows/parity/config"
 	app "github.com/mefellows/parity/parity"
+	"github.com/mefellows/parity/utils"
 )
 
 // RunCommand contains parameters required to configure the Parity runtime
 type RunCommand struct {
-	Meta    config.Meta
-	Verbose bool
-	X       bool
+	Meta       config.Meta
+	Verbose    bool
+	ConfigFile string
+	X          bool
 }
 
 // Run Parity
@@ -25,22 +25,19 @@ func (c *RunCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("sync", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Meta.Ui.Output(c.Help()) }
 
-	var verbose bool
-	dir, _ := os.Getwd()
-	var configFile = fmt.Sprintf("%s/parity.yml", dir)
-	cmdFlags.BoolVar(&verbose, "verbose", true, "Enable verbose output")
+	cmdFlags.BoolVar(&c.Verbose, "verbose", true, "Enable verbose output")
 	cmdFlags.BoolVar(&c.X, "x", false, "Enable X redirection (Mac OSX Only)")
-	cmdFlags.StringVar(&configFile, "config", configFile, "Enable verbose output")
+	cmdFlags.StringVar(&c.ConfigFile, "config", utils.DefaultParityConfigurationFile(), "Enable verbose output")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
-	if !verbose {
+	if !c.Verbose {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	parity := app.New(&config.Config{Ui: c.Meta.Ui, ConfigFile: configFile})
+	parity := app.New(&config.Config{Ui: c.Meta.Ui, ConfigFile: c.ConfigFile})
 	parity.Run()
 
 	return 0

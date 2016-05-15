@@ -1,0 +1,13 @@
+FROM my-project2:latest
+
+#
+# Agent Docker Image
+#
+# This image enhances the base image in the root project directory `./Dockerfile` with stuff needed for CI
+# (AWS CLI, browser unit testing etc.)
+# Always ensure it is built before this one is built.
+#
+# TODO: Version pin?
+
+RUN bundle exec rake test
+CMD ["bash"]
